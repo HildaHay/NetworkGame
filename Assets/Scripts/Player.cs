@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class PlayerMoveScript : NetworkBehaviour
+public class Player : MonoBehaviour
 {
     NetworkIdentity networkIdentity;
+
+    public Vector2 virtualJoystick = new Vector2(0, 0);
 
     private bool facing_left = true;
     private SpriteRenderer m_sprite;
@@ -21,6 +23,16 @@ public class PlayerMoveScript : NetworkBehaviour
         fetchSpriteRenderer();
     }
 
+	void FixedUpdate () {
+		if(virtualJoystick.x < 0) {
+            facing_left = true;
+		} else if(virtualJoystick.x > 0) {
+            facing_left = false;
+        }
+		addForce(virtualJoystick.x, virtualJoystick.y);
+	}
+
+
     // Update is called once per frame
     void Update()
     {
@@ -35,24 +47,24 @@ public class PlayerMoveScript : NetworkBehaviour
         {
             if (Input.GetKey("w"))
             {
-                this.transform.position += new Vector3(0.0f, 1.0f, 0.0f) * Time.deltaTime;
+                this.addForce(0.0f, 1.0f);
                 direction.y += 1;
             }
             if (Input.GetKey("a"))
             {
                 facing_left = true;
-                this.transform.position += new Vector3(-1.0f, 0.0f, 0.0f) * Time.deltaTime;
+                this.addForce(-1.0f, 0.0f);
                 direction.x -= 1;
             }
             if (Input.GetKey("s"))
             {
-                this.transform.position += new Vector3(0.0f, -1.0f, 0.0f) * Time.deltaTime;
+                this.addForce(0.0f, -1.0f);
                 direction.y -= 1;
             }
             if (Input.GetKey("d"))
             {
                 facing_left = false;
-                this.transform.position += new Vector3(1.0f, 0.0f, 0.0f) * Time.deltaTime;
+                this.addForce(1.0f, 0.0f);
                 direction.x += 1;
             }
 
@@ -63,6 +75,20 @@ public class PlayerMoveScript : NetworkBehaviour
         }
 
         m_sprite.flipX = facing_left;
+    }
+
+    public void addVirtualForce(float x_axis, float y_axis) {
+        virtualJoystick = new Vector2(x_axis, y_axis);
+    }
+
+    public void addForce(float x_axis, float y_axis) {
+        Vector3 movement = new Vector3(x_axis, y_axis, 0);
+
+        if (movement.magnitude > 1.0)
+        {
+            movement.Normalize();
+        }
+        this.transform.position += movement * Time.deltaTime;
     }
 
     void fetchSpriteRenderer()
