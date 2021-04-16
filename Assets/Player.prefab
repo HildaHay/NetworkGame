@@ -99,7 +99,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   virtualJoystick: {x: 0, y: 0}
-  bulletPool: {fileID: 0}
+  bullet: {fileID: 2772037859085404341, guid: 40d19516d14b2e641bb43a73ef767888, type: 3}
 --- !u!114 &1639760080480616028
 MonoBehaviour:
   m_ObjectHideFlags: 0
