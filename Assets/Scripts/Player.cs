@@ -12,7 +12,8 @@ public class Player : NetworkBehaviour
     private bool facing_left = true;
     private SpriteRenderer m_sprite;
 
-    public GameObject bullet;
+    // public GameObject bullet;
+    public GameObject bulletPool;
 
     Vector2Int direction = new Vector2Int( 1, 0 );
 
@@ -21,6 +22,8 @@ public class Player : NetworkBehaviour
     {
         networkIdentity = this.GetComponent<NetworkIdentity>();
         fetchSpriteRenderer();
+
+        bulletPool = GameObject.Find("BulletPool");
     }
 
 	void FixedUpdate () {
@@ -78,6 +81,11 @@ public class Player : NetworkBehaviour
         m_sprite.flipX = facing_left;
     }
 
+    public override void OnStartServer()
+    {
+        //bulletPool = GameObject.Find("BulletPool");
+    }
+
     public void addVirtualForce(float x_axis, float y_axis) {
         virtualJoystick = new Vector2(x_axis, y_axis);
     }
@@ -100,17 +108,15 @@ public class Player : NetworkBehaviour
     [Command]
     void CmdFireBullet(int x, int y)
     {
-        Debug.Log("shoot");
-        GameObject newBullet = Instantiate(bullet, this.transform.position, Quaternion.identity);
-        newBullet.GetComponent<Rigidbody2D>().velocity = new Vector3(x * 10, y * 10, 0);
-        NetworkServer.Spawn(newBullet);
-    }
+        //GameObject newBullet = Instantiate(bullet, this.transform.position, Quaternion.identity);
+        //newBullet.GetComponent<Rigidbody2D>().velocity = new Vector3(x * 10, y * 10, 0);
+        //NetworkServer.Spawn(newBullet);
 
-    //void FireBullet(int x, int y)
-    //{
-    //    Debug.Log("shoot");
-    //    GameObject newBullet = Instantiate(bullet, this.transform.position, Quaternion.identity);
-    //    newBullet.GetComponent<Rigidbody2D>().velocity = new Vector3(x * 10, y * 10, 0);
-    //    NetworkServer.Spawn(newBullet);
-    //}
+        GameObject b = bulletPool.GetComponent<BulletPoolScript>().RetrieveBullet();
+        if (b != null)
+        {
+            b.transform.position = this.transform.position;
+            b.GetComponent<Rigidbody2D>().velocity = new Vector3(x * 10, y * 10, 0);
+        }
+    }
 }
