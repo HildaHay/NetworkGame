@@ -71,4 +71,4 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 
 # Don't ignore NetworkServer because I fucked with it and we need those changes for the game to work
-/Library/PackageCache/com.unity.multiplayer-hlapi@1.0.8/Runtime/NetworkServer.cs
+!/Library/PackageCache/com.unity.multiplayer-hlapi@1.0.8/Runtime/NetworkServer.cs
