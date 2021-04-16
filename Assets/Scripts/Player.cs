@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class Player : MonoBehaviour
+public class Player : NetworkBehaviour
 {
     NetworkIdentity networkIdentity;
 
@@ -70,6 +70,7 @@ public class Player : MonoBehaviour
 
             if (Input.GetKeyDown("space"))
             {
+                //CmdFireBullet(direction.x, direction.y);
                 CmdFireBullet(direction.x, direction.y);
             }
         }
@@ -104,4 +105,12 @@ public class Player : MonoBehaviour
         newBullet.GetComponent<Rigidbody2D>().velocity = new Vector3(x * 10, y * 10, 0);
         NetworkServer.Spawn(newBullet);
     }
+
+    //void FireBullet(int x, int y)
+    //{
+    //    Debug.Log("shoot");
+    //    GameObject newBullet = Instantiate(bullet, this.transform.position, Quaternion.identity);
+    //    newBullet.GetComponent<Rigidbody2D>().velocity = new Vector3(x * 10, y * 10, 0);
+    //    NetworkServer.Spawn(newBullet);
+    //}
 }
