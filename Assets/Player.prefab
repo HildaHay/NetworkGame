@@ -97,6 +97,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 23001454d59c0f54c87afc81165c9ca0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  virtualJoystick: {x: 0, y: 0}
   bullet: {fileID: 2772037859085404341, guid: 40d19516d14b2e641bb43a73ef767888, type: 3}
 --- !u!114 &1639760080480616028
 MonoBehaviour:
