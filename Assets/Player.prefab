@@ -13,9 +13,10 @@ GameObject:
   - component: {fileID: 2460394721927346059}
   - component: {fileID: 1639760080480616028}
   - component: {fileID: 1165392395973534326}
+  - component: {fileID: 8473841271103431741}
   m_Layer: 0
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -97,7 +98,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 23001454d59c0f54c87afc81165c9ca0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bullet: {fileID: 2772037859085404341, guid: 40d19516d14b2e641bb43a73ef767888, type: 3}
+  virtualJoystick: {x: 0, y: 0}
+  bulletPool: {fileID: 0}
 --- !u!114 &1639760080480616028
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -153,3 +155,19 @@ MonoBehaviour:
   m_SnapThreshold: 5
   m_InterpolateRotation: 1
   m_InterpolateMovement: 1
+--- !u!58 &8473841271103431741
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2460394721927346056}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  serializedVersion: 2
+  m_Radius: 0.16
