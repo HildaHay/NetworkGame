@@ -117,6 +117,7 @@ public class Player : NetworkBehaviour
         {
             b.transform.position = this.transform.position;
             b.GetComponent<Rigidbody2D>().velocity = new Vector3(x * 10, y * 10, 0);
+            b.GetComponent<BulletScript>().owner = this.gameObject;
         }
     }
 }

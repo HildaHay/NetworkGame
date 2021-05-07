@@ -14,7 +14,7 @@ public class BulletPoolScript : NetworkBehaviour
     // Start is called before the first frame update
     void Start()
     {
-
+        this.transform.position = new Vector3(100, 100, 0);
     }
 
     // Update is called once per frame
@@ -31,8 +31,6 @@ public class BulletPoolScript : NetworkBehaviour
 
     void InitializeBulletPool()
     {
-        Debug.Log("foooo");
-
         // called when a server is created
         bulletPool = new List<GameObject>();
         for (int i = 0; i < bulletCount; i++)
@@ -41,7 +39,8 @@ public class BulletPoolScript : NetworkBehaviour
             NetworkServer.Spawn(newBullet);
             bulletPool.Add(newBullet);
             newBullet.GetComponent<BulletScript>().bulletPool = this.gameObject;
-            newBullet.SetActive(false);
+            newBullet.GetComponent<Rigidbody2D>().simulated = false;
+            //newBullet.SetActive(false);
         }
 
         bulletPoolReady = true;
@@ -57,13 +56,12 @@ public class BulletPoolScript : NetworkBehaviour
 
     public GameObject RetrieveBullet()
     {
-        Debug.Log("retrieving bullet");
-
         if (bulletPool.Count >= 1)
         {
             GameObject b = bulletPool[0];
             bulletPool.RemoveAt(0);
-            b.SetActive(true);
+            b.GetComponent<Rigidbody2D>().simulated = true;
+            // b.SetActive(true);
             b.GetComponent<BulletScript>().Fire();
 
             return b;
@@ -77,33 +75,9 @@ public class BulletPoolScript : NetworkBehaviour
 
     public void ReturnBullet(GameObject b)
     {
-        b.SetActive(false);
+        b.GetComponent<Rigidbody2D>().simulated = false;
+        //b.SetActive(false);
         bulletPool.Add(b);
+        b.transform.position = this.transform.position;
     }
-
-    //[ClientRpc]
-    //public GameObject RpcRetrieveBullet()
-    //{
-    //    Debug.Log("retrieving bullet");
-
-    //    if (bulletPool.Count >= 1)
-    //    {
-    //        GameObject b = bulletPool[0];
-    //        bulletPool.RemoveAt(0);
-    //        b.SetActive(true);
-    //        b.GetComponent<BulletScript>().Fire();
-
-    //        return b;
-    //    } else {
-    //        Debug.Log("No bullets in pool");
-    //        return null;
-    //    }
-    //}
-
-    //[ClientRpc]
-    //public void RpcReturnBullet(GameObject b)
-    //{
-    //    b.SetActive(false);
-    //    bulletPool.Add(b);
-    //}
 }

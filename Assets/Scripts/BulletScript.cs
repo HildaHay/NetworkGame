@@ -5,21 +5,23 @@ using UnityEngine.Networking;
 
 public class BulletScript : NetworkBehaviour
 {
+    bool isActive = false;
     float lifetime;
 
     public GameObject bulletPool;
+    public GameObject owner;
 
     // Start is called before the first frame update
     void Start()
     {
-        //lifetime = 1.0f;
+
     }
 
     // Update is called once per frame
     void Update()
     {
         lifetime -= Time.deltaTime;
-        if (lifetime < 0)
+        if (isActive && lifetime < 0)
         {
             // Destroy(this.gameObject);
             if (isServer)
@@ -32,11 +34,24 @@ public class BulletScript : NetworkBehaviour
     public void Fire()
     {
         lifetime = 1.0f;
+        isActive = true;
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if(isServer)
+        {
+            if (collision.gameObject != owner && collision.gameObject.CompareTag("Player"))
+            {
+                CmdDespawnBullet();
+            }
+        }
     }
 
     [Command]
     void CmdDespawnBullet()
     {
         bulletPool.GetComponent<BulletPoolScript>().ReturnBullet(this.gameObject);
+        isActive = false;
     }
 }
