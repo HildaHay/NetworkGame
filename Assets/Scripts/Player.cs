@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class Player : MonoBehaviour
+public class Player : NetworkBehaviour
 {
     NetworkIdentity networkIdentity;
 
@@ -12,7 +12,8 @@ public class Player : MonoBehaviour
     private bool facing_left = true;
     private SpriteRenderer m_sprite;
 
-    public GameObject bullet;
+    // public GameObject bullet;
+    public GameObject bulletPool;
 
     Vector2Int direction = new Vector2Int( 1, 0 );
 
@@ -21,6 +22,8 @@ public class Player : MonoBehaviour
     {
         networkIdentity = this.GetComponent<NetworkIdentity>();
         fetchSpriteRenderer();
+
+        bulletPool = GameObject.Find("BulletPool");
     }
 
 	void FixedUpdate () {
@@ -70,11 +73,17 @@ public class Player : MonoBehaviour
 
             if (Input.GetKeyDown("space"))
             {
+                //CmdFireBullet(direction.x, direction.y);
                 CmdFireBullet(direction.x, direction.y);
             }
         }
 
         m_sprite.flipX = facing_left;
+    }
+
+    public override void OnStartServer()
+    {
+        //bulletPool = GameObject.Find("BulletPool");
     }
 
     public void addVirtualForce(float x_axis, float y_axis) {
@@ -99,9 +108,16 @@ public class Player : MonoBehaviour
     [Command]
     void CmdFireBullet(int x, int y)
     {
-        Debug.Log("shoot");
-        GameObject newBullet = Instantiate(bullet, this.transform.position, Quaternion.identity);
-        newBullet.GetComponent<Rigidbody2D>().velocity = new Vector3(x * 10, y * 10, 0);
-        NetworkServer.Spawn(newBullet);
+        //GameObject newBullet = Instantiate(bullet, this.transform.position, Quaternion.identity);
+        //newBullet.GetComponent<Rigidbody2D>().velocity = new Vector3(x * 10, y * 10, 0);
+        //NetworkServer.Spawn(newBullet);
+
+        GameObject b = bulletPool.GetComponent<BulletPoolScript>().RetrieveBullet();
+        if (b != null)
+        {
+            b.transform.position = this.transform.position;
+            b.GetComponent<Rigidbody2D>().velocity = new Vector3(x * 10, y * 10, 0);
+            b.GetComponent<BulletScript>().owner = this.gameObject;
+        }
     }
 }
