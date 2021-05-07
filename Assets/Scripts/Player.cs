@@ -12,8 +12,12 @@ public class Player : NetworkBehaviour
     private bool facing_left = true;
     private SpriteRenderer m_sprite;
 
-    // public GameObject bullet;
     public GameObject bulletPool;
+    public GameObject ruleManager;
+    public PlayerStats stats; // how is this handled on client?
+
+    [SyncVar] int health;
+    [SyncVar] bool alive;
 
     Vector2Int direction = new Vector2Int( 1, 0 );
 
@@ -23,7 +27,11 @@ public class Player : NetworkBehaviour
         networkIdentity = this.GetComponent<NetworkIdentity>();
         fetchSpriteRenderer();
 
-        bulletPool = GameObject.Find("BulletPool");
+        alive = true;
+        if (NetworkServer.active)
+        {
+            health = ruleManager.GetComponent<RuleManagerScript>().GetBaseHealth();
+        }
     }
 
 	void FixedUpdate () {
@@ -73,7 +81,6 @@ public class Player : NetworkBehaviour
 
             if (Input.GetKeyDown("space"))
             {
-                //CmdFireBullet(direction.x, direction.y);
                 CmdFireBullet(direction.x, direction.y);
             }
         }
@@ -83,7 +90,7 @@ public class Player : NetworkBehaviour
 
     public override void OnStartServer()
     {
-        //bulletPool = GameObject.Find("BulletPool");
+
     }
 
     public void addVirtualForce(float x_axis, float y_axis) {
@@ -108,16 +115,28 @@ public class Player : NetworkBehaviour
     [Command]
     void CmdFireBullet(int x, int y)
     {
-        //GameObject newBullet = Instantiate(bullet, this.transform.position, Quaternion.identity);
-        //newBullet.GetComponent<Rigidbody2D>().velocity = new Vector3(x * 10, y * 10, 0);
-        //NetworkServer.Spawn(newBullet);
-
         GameObject b = bulletPool.GetComponent<BulletPoolScript>().RetrieveBullet();
         if (b != null)
         {
             b.transform.position = this.transform.position;
             b.GetComponent<Rigidbody2D>().velocity = new Vector3(x * 10, y * 10, 0);
             b.GetComponent<BulletScript>().owner = this.gameObject;
+            b.GetComponent<BulletScript>().ownerId = networkIdentity.netId;
+        }
+    }
+
+    public void TakeDamageFromPlayer(int d, NetworkInstanceId attackerID)
+    {
+        if (alive)
+        {
+            Debug.Log("Took " + d + " damage from " + attackerID.ToString());
+            this.health -= d;
+            ruleManager.GetComponent<RuleManagerScript>().PlayerDamagedByPlayer(networkIdentity.netId, attackerID);
+            if (health <= 0)
+            {
+                alive = false;
+                ruleManager.GetComponent<RuleManagerScript>().PlayerKilled(networkIdentity.netId, attackerID);
+            }
         }
     }
 }

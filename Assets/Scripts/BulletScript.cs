@@ -10,6 +10,7 @@ public class BulletScript : NetworkBehaviour
 
     public GameObject bulletPool;
     public GameObject owner;
+    public NetworkInstanceId ownerId;
 
     // Start is called before the first frame update
     void Start()
@@ -43,6 +44,7 @@ public class BulletScript : NetworkBehaviour
         {
             if (collision.gameObject != owner && collision.gameObject.CompareTag("Player"))
             {
+                collision.gameObject.GetComponent<Player>().TakeDamageFromPlayer(1, ownerId);
                 CmdDespawnBullet();
             }
         }
