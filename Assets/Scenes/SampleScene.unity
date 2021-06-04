@@ -861,7 +861,7 @@ GameObject:
   - component: {fileID: 1138212976}
   - component: {fileID: 1138212975}
   m_Layer: 0
-  m_Name: startpos3
+  m_Name: SpawnPoint3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -926,6 +926,11 @@ MonoBehaviour:
   networkManager: {fileID: 794824224}
   playerNameText: {fileID: 651328013}
   scoreText: {fileID: 979124651}
+  respawnPoints:
+  - {fileID: 1742709088}
+  - {fileID: 1889878668}
+  - {fileID: 1138212974}
+  - {fileID: 1989009456}
 --- !u!4 &1209380119
 Transform:
   m_ObjectHideFlags: 0
@@ -984,7 +989,7 @@ GameObject:
   - component: {fileID: 1742709090}
   - component: {fileID: 1742709089}
   m_Layer: 0
-  m_Name: startpos1
+  m_Name: SpawnPoint1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1088,7 +1093,7 @@ GameObject:
   - component: {fileID: 1889878670}
   - component: {fileID: 1889878669}
   m_Layer: 0
-  m_Name: startpos2
+  m_Name: SpawnPoint2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1131,7 +1136,7 @@ GameObject:
   - component: {fileID: 1989009458}
   - component: {fileID: 1989009457}
   m_Layer: 0
-  m_Name: startpos4
+  m_Name: SpawnPoint4
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -27,20 +27,26 @@ public class Player : NetworkBehaviour
         networkIdentity = this.GetComponent<NetworkIdentity>();
         fetchSpriteRenderer();
 
-        alive = true;
         if (NetworkServer.active)
         {
-            health = ruleManager.GetComponent<RuleManagerScript>().GetBaseHealth();
+            //mdRespawnPlayer(ruleManager.GetComponent<RuleManagerScript>().GetSpawnPoint());
+            InitHealth();
         }
     }
 
 	void FixedUpdate () {
-		if(virtualJoystick.x < 0) {
-            facing_left = true;
-		} else if(virtualJoystick.x > 0) {
-            facing_left = false;
+        if (alive)
+        {
+            if (virtualJoystick.x < 0)
+            {
+                facing_left = true;
+            }
+            else if (virtualJoystick.x > 0)
+            {
+                facing_left = false;
+            }
+            addForce(virtualJoystick.x, virtualJoystick.y);
         }
-		addForce(virtualJoystick.x, virtualJoystick.y);
 	}
 
 
@@ -54,7 +60,7 @@ public class Player : NetworkBehaviour
         {
             fetchSpriteRenderer();
         }
-        if (networkIdentity.isLocalPlayer)
+        if (networkIdentity.isLocalPlayer && alive)
         {
             if (Input.GetKey("w"))
             {
@@ -112,31 +118,78 @@ public class Player : NetworkBehaviour
         m_sprite = GetComponent<SpriteRenderer>();
     }
 
-    [Command]
-    void CmdFireBullet(int x, int y)
+    void InitHealth()
     {
-        GameObject b = bulletPool.GetComponent<BulletPoolScript>().RetrieveBullet();
-        if (b != null)
+        health = ruleManager.GetComponent<RuleManagerScript>().GetBaseHealth();
+        alive = true;
+    }
+
+    [Command]
+    public void CmdRespawnPlayer(Vector2 loc)
+    {
+        InitHealth();
+        RpcRespawnPlayer(loc);
+    }
+
+    [ClientRpc]
+    void RpcRespawnPlayer(Vector2 loc)
+    {
+        if (hasAuthority)
         {
-            b.transform.position = this.transform.position;
-            b.GetComponent<Rigidbody2D>().velocity = new Vector3(x * 10, y * 10, 0);
-            b.GetComponent<BulletScript>().owner = this.gameObject;
-            b.GetComponent<BulletScript>().ownerId = networkIdentity.netId;
+            this.transform.position = loc;
         }
     }
 
-    public void TakeDamageFromPlayer(int d, NetworkInstanceId attackerID)
+    [Command]
+    void CmdFireBullet(int x, int y)
     {
         if (alive)
         {
-            Debug.Log("Took " + d + " damage from " + attackerID.ToString());
-            this.health -= d;
-            ruleManager.GetComponent<RuleManagerScript>().PlayerDamagedByPlayer(networkIdentity.netId, attackerID);
-            if (health <= 0)
+            GameObject b = bulletPool.GetComponent<BulletPoolScript>().RetrieveBullet();
+            if (b != null)
             {
-                alive = false;
-                ruleManager.GetComponent<RuleManagerScript>().PlayerKilled(networkIdentity.netId, attackerID);
+                b.transform.position = this.transform.position;
+                b.GetComponent<Rigidbody2D>().velocity = new Vector3(x * 10, y * 10, 0);
+                b.GetComponent<BulletScript>().owner = this.gameObject;
+                b.GetComponent<BulletScript>().ownerId = networkIdentity.netId;
             }
         }
+    }
+
+    [Command]
+    public void CmdTakeDamageFromPlayer(int d, NetworkInstanceId attackerID)
+    {
+        Debug.Log("Took " + d + " damage from " + attackerID.ToString());
+        this.health -= d;
+        //ruleManager.GetComponent<RuleManagerScript>().CmdPlayerDamagedByPlayer(networkIdentity.netId, attackerID);
+        if (health <= 0)
+        {
+            CmdDie(attackerID);
+        }
+    }
+
+    [Command]
+    void CmdDie(NetworkInstanceId attackerID)
+    {
+        if (alive)
+        {
+            alive = false;
+            ruleManager.GetComponent<RuleManagerScript>().CmdPlayerKilled(networkIdentity.netId, attackerID);
+            RpcDie();
+        }
+    }
+
+    [ClientRpc]
+    public void RpcDie()
+    {
+        if (hasAuthority)
+        {
+            transform.position = new Vector2(100, 100);
+        }
+    }
+
+    public bool IsAlive()
+    {
+        return alive;
     }
 }
