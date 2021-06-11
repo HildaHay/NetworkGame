@@ -65,7 +65,7 @@ public class NetController : MonoBehaviour {
 	[Tooltip("The players which are added to the game when a person joins")]
 	public GameObject playerPrefab;
 
-	public Dictionary<string, Player> players = new Dictionary<string, Player>();
+	public Dictionary<string, PlayerIdentity> players = new Dictionary<string, PlayerIdentity>();
 
 	[Tooltip("The Animation to call on game over.")]
 	public Animator cameraAnimator;

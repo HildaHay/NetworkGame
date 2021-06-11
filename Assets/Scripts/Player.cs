@@ -3,23 +3,25 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class Player : NetworkBehaviour
+public class PlayerIdentity : NetworkBehaviour
 {
     NetworkIdentity networkIdentity;
 
+    PlayerCharacter character;
+
     public Vector2 virtualJoystick = new Vector2(0, 0);
 
-    private bool facing_left = true;
-    private SpriteRenderer m_sprite;
+    //private bool facing_left = true;
+    //private SpriteRenderer m_sprite;
 
-    public GameObject bulletPool;
+    //public GameObject bulletPool;
     public RuleManagerScript ruleManager;
     public PlayerServerStats stats; // how is this handled on client?
 
     [SyncVar] int health;
     [SyncVar] bool alive;
 
-    Vector2Int direction = new Vector2Int( 1, 0 );
+    //Vector2Int direction = new Vector2Int( 1, 0 );
 
     // Start is called before the first frame update
     void Start()
