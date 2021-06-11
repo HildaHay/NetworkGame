@@ -27,7 +27,7 @@ public class Player : NetworkBehaviour
     private SpriteRenderer m_sprite;
 
     public GameObject bulletPool;
-    public RuleManagerScript ruleManager;
+    public RuleManager ruleManager;
     public PlayerServerStats stats; // how is this handled on client?
 
     [SyncVar] int health;
@@ -71,7 +71,7 @@ public class Player : NetworkBehaviour
         networkIdentity = this.GetComponent<NetworkIdentity>();
         fetchSpriteRenderer();
 
-        ruleManager = GameObject.Find("RuleManager").GetComponent<RuleManagerScript>();
+        ruleManager = GameObject.Find("RuleManager").GetComponent<RuleManager>();
 
         if (NetworkServer.active)
         {
