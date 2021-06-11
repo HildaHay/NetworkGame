@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 
-public class RuleManagerScript : NetworkBehaviour
+public class RuleManager : NetworkBehaviour
 {
     [SerializeField] GameObject networkManager;
     [SerializeField] GameObject playerNameText;
