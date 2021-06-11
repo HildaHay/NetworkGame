@@ -13,8 +13,8 @@ public class Player : NetworkBehaviour
     private SpriteRenderer m_sprite;
 
     public GameObject bulletPool;
-    public GameObject ruleManager;
-    public PlayerStats stats; // how is this handled on client?
+    public RuleManagerScript ruleManager;
+    public PlayerServerStats stats; // how is this handled on client?
 
     [SyncVar] int health;
     [SyncVar] bool alive;
@@ -27,15 +27,16 @@ public class Player : NetworkBehaviour
         networkIdentity = this.GetComponent<NetworkIdentity>();
         fetchSpriteRenderer();
 
+        ruleManager = GameObject.Find("RuleManager").GetComponent<RuleManagerScript>();
+
         if (NetworkServer.active)
         {
-            //mdRespawnPlayer(ruleManager.GetComponent<RuleManagerScript>().GetSpawnPoint());
             InitHealth();
         }
     }
 
 	void FixedUpdate () {
-        if (alive)
+        if (alive && ruleManager.GameRunning())
         {
             if (virtualJoystick.x < 0)
             {
@@ -60,7 +61,7 @@ public class Player : NetworkBehaviour
         {
             fetchSpriteRenderer();
         }
-        if (networkIdentity.isLocalPlayer && alive)
+        if (networkIdentity.isLocalPlayer && alive && ruleManager.GameRunning())
         {
             if (Input.GetKey("w"))
             {
@@ -120,7 +121,7 @@ public class Player : NetworkBehaviour
 
     void InitHealth()
     {
-        health = ruleManager.GetComponent<RuleManagerScript>().GetBaseHealth();
+        health = ruleManager.GetBaseHealth();
         alive = true;
     }
 
@@ -159,9 +160,7 @@ public class Player : NetworkBehaviour
     [Command]
     public void CmdTakeDamageFromPlayer(int d, NetworkInstanceId attackerID)
     {
-        Debug.Log("Took " + d + " damage from " + attackerID.ToString());
         this.health -= d;
-        //ruleManager.GetComponent<RuleManagerScript>().CmdPlayerDamagedByPlayer(networkIdentity.netId, attackerID);
         if (health <= 0)
         {
             CmdDie(attackerID);
@@ -174,7 +173,7 @@ public class Player : NetworkBehaviour
         if (alive)
         {
             alive = false;
-            ruleManager.GetComponent<RuleManagerScript>().CmdPlayerKilled(networkIdentity.netId, attackerID);
+            ruleManager.CmdPlayerKilled(networkIdentity.netId, attackerID);
             RpcDie();
         }
     }

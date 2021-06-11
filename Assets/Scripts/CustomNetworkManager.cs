@@ -36,7 +36,6 @@ public class CustomNetworkManager : NetworkManager
 
     void InitializePlayer(GameObject p)
     {
-        p.GetComponent<Player>().ruleManager = ruleManager;
         p.GetComponent<Player>().bulletPool = bulletPool;
         ruleManager.GetComponent<RuleManagerScript>().AddPlayer(p);
     }
@@ -69,6 +68,18 @@ public class CustomNetworkManager : NetworkManager
         Debug.Log("Server has stopped");
         ClearPlayerList();
         ruleManager.GetComponent<RuleManagerScript>().ServerShutdown();
+    }
+
+    public override void OnStartClient(NetworkClient client)
+    {
+        base.OnStartClient(client);
+        ruleManager.GetComponent<RuleManagerScript>().ClientSetup();
+    }
+
+    public override void OnStopClient()
+    {
+        base.OnStopClient();
+        ruleManager.GetComponent<RuleManagerScript>().ClientShutdown();
     }
 
     void ClearPlayerList()
