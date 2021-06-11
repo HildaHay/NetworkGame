@@ -12,8 +12,12 @@ public class Player : NetworkBehaviour
     private bool facing_left = true;
     private SpriteRenderer m_sprite;
 
-    // public GameObject bullet;
     public GameObject bulletPool;
+    public RuleManagerScript ruleManager;
+    public PlayerServerStats stats; // how is this handled on client?
+
+    [SyncVar] int health;
+    [SyncVar] bool alive;
 
     Vector2Int direction = new Vector2Int( 1, 0 );
 
@@ -23,16 +27,27 @@ public class Player : NetworkBehaviour
         networkIdentity = this.GetComponent<NetworkIdentity>();
         fetchSpriteRenderer();
 
-        bulletPool = GameObject.Find("BulletPool");
+        ruleManager = GameObject.Find("RuleManager").GetComponent<RuleManagerScript>();
+
+        if (NetworkServer.active)
+        {
+            InitHealth();
+        }
     }
 
 	void FixedUpdate () {
-		if(virtualJoystick.x < 0) {
-            facing_left = true;
-		} else if(virtualJoystick.x > 0) {
-            facing_left = false;
+        if (alive && ruleManager.GameRunning())
+        {
+            if (virtualJoystick.x < 0)
+            {
+                facing_left = true;
+            }
+            else if (virtualJoystick.x > 0)
+            {
+                facing_left = false;
+            }
+            addForce(virtualJoystick.x, virtualJoystick.y);
         }
-		addForce(virtualJoystick.x, virtualJoystick.y);
 	}
 
 
@@ -46,7 +61,7 @@ public class Player : NetworkBehaviour
         {
             fetchSpriteRenderer();
         }
-        if (networkIdentity.isLocalPlayer)
+        if (networkIdentity.isLocalPlayer && alive && ruleManager.GameRunning())
         {
             if (Input.GetKey("w"))
             {
@@ -73,7 +88,6 @@ public class Player : NetworkBehaviour
 
             if (Input.GetKeyDown("space"))
             {
-                //CmdFireBullet(direction.x, direction.y);
                 CmdFireBullet(direction.x, direction.y);
             }
         }
@@ -83,7 +97,7 @@ public class Player : NetworkBehaviour
 
     public override void OnStartServer()
     {
-        //bulletPool = GameObject.Find("BulletPool");
+
     }
 
     public void addVirtualForce(float x_axis, float y_axis) {
@@ -105,19 +119,76 @@ public class Player : NetworkBehaviour
         m_sprite = GetComponent<SpriteRenderer>();
     }
 
+    void InitHealth()
+    {
+        health = ruleManager.GetBaseHealth();
+        alive = true;
+    }
+
+    [Command]
+    public void CmdRespawnPlayer(Vector2 loc)
+    {
+        InitHealth();
+        RpcRespawnPlayer(loc);
+    }
+
+    [ClientRpc]
+    void RpcRespawnPlayer(Vector2 loc)
+    {
+        if (hasAuthority)
+        {
+            this.transform.position = loc;
+        }
+    }
+
     [Command]
     void CmdFireBullet(int x, int y)
     {
-        //GameObject newBullet = Instantiate(bullet, this.transform.position, Quaternion.identity);
-        //newBullet.GetComponent<Rigidbody2D>().velocity = new Vector3(x * 10, y * 10, 0);
-        //NetworkServer.Spawn(newBullet);
-
-        GameObject b = bulletPool.GetComponent<BulletPoolScript>().RetrieveBullet();
-        if (b != null)
+        if (alive)
         {
-            b.transform.position = this.transform.position;
-            b.GetComponent<Rigidbody2D>().velocity = new Vector3(x * 10, y * 10, 0);
-            b.GetComponent<BulletScript>().owner = this.gameObject;
+            GameObject b = bulletPool.GetComponent<BulletPoolScript>().RetrieveBullet();
+            if (b != null)
+            {
+                b.transform.position = this.transform.position;
+                b.GetComponent<Rigidbody2D>().velocity = new Vector3(x * 10, y * 10, 0);
+                b.GetComponent<BulletScript>().owner = this.gameObject;
+                b.GetComponent<BulletScript>().ownerId = networkIdentity.netId;
+            }
         }
+    }
+
+    [Command]
+    public void CmdTakeDamageFromPlayer(int d, NetworkInstanceId attackerID)
+    {
+        this.health -= d;
+        if (health <= 0)
+        {
+            CmdDie(attackerID);
+        }
+    }
+
+    [Command]
+    void CmdDie(NetworkInstanceId attackerID)
+    {
+        if (alive)
+        {
+            alive = false;
+            ruleManager.CmdPlayerKilled(networkIdentity.netId, attackerID);
+            RpcDie();
+        }
+    }
+
+    [ClientRpc]
+    public void RpcDie()
+    {
+        if (hasAuthority)
+        {
+            transform.position = new Vector2(100, 100);
+        }
+    }
+
+    public bool IsAlive()
+    {
+        return alive;
     }
 }
