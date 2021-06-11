@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class BulletPoolScript : NetworkBehaviour
+public class BulletPool : NetworkBehaviour
 {
     bool bulletPoolReady = false;
 
@@ -38,7 +38,7 @@ public class BulletPoolScript : NetworkBehaviour
             GameObject newBullet = Instantiate(bulletPrefab, this.transform.position, Quaternion.identity);
             NetworkServer.Spawn(newBullet);
             bulletPool.Add(newBullet);
-            newBullet.GetComponent<BulletScript>().bulletPool = this.gameObject;
+            newBullet.GetComponent<Bullet>().bulletPool = this.gameObject;
             newBullet.GetComponent<Rigidbody2D>().simulated = false;
             //newBullet.SetActive(false);
         }
@@ -62,7 +62,7 @@ public class BulletPoolScript : NetworkBehaviour
             bulletPool.RemoveAt(0);
             b.GetComponent<Rigidbody2D>().simulated = true;
             // b.SetActive(true);
-            b.GetComponent<BulletScript>().Fire();
+            b.GetComponent<Bullet>().Fire();
 
             return b;
         }

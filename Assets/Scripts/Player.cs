@@ -5,6 +5,7 @@ using UnityEngine.Networking;
 
 public class Player : NetworkBehaviour
 {
+    private const float MAX_SPEED = 5.0f;
     private enum PlayerState
     {
         Standing,               // Player is currently not moving
@@ -32,11 +33,17 @@ public class Player : NetworkBehaviour
     [SyncVar] int health;
     [SyncVar] bool alive;
 
-    private float health = 1000.0f;         // in ml of blood
-    private float health_mult = 1.0f;
-    private float health_gen_amount = 10;   // in ml of blood
+    // private float health = 1000.0f;         // in ml of blood
+
+    [TooltipAttribute("Health Multiplyer")]
+    public float health_mult = 1.0f;
+
+    [Tooltip("Health regen amount (in ml of blood)")]
+    public float health_gen_amount = 10;   // in ml of blood
     private float health_gen_period = 1;    // in seconds
-    private float speed_mult = 1.0f;
+
+    [TooltipAttribute("Speed Multiplyer")]
+    public float speed_mult = 10.0f;
     private int death_count = 0;
 
     private PlayerState current_player_state;
@@ -49,12 +56,18 @@ public class Player : NetworkBehaviour
     private float nextActionTime = 0.0f;
 
     Vector2Int direction = new Vector2Int( 1, 0 );
+    private Vector3 velocity = new Vector3();
+    private Rigidbody2D rigidbody;
+    private float horizontal;
+    private float vertical;
+    private float moveLimiter = 0.7f;
 
     // Start is called before the first frame update
     void Start()
     {
+        rigidbody = this.GetComponent<Rigidbody2D>();
         last_player_state = current_player_state = PlayerState.Standing;
-        health = 100.0f;
+        // health = 100.0f;
         networkIdentity = this.GetComponent<NetworkIdentity>();
         fetchSpriteRenderer();
 
@@ -79,6 +92,14 @@ public class Player : NetworkBehaviour
             }
             addForce(virtualJoystick.x, virtualJoystick.y);
         }
+		addForce(virtualJoystick.x, virtualJoystick.y);
+
+        if (horizontal != 0 && vertical != 0) { // Check for diagonal movement
+            // limit movement speed diagonally, so you move at 70% speed
+            horizontal *= moveLimiter;
+            vertical *= moveLimiter;
+        }
+        this.addForce(horizontal, vertical);
 	}
 
 
@@ -94,28 +115,11 @@ public class Player : NetworkBehaviour
         }
         if (networkIdentity.isLocalPlayer && alive && ruleManager.GameRunning())
         {
-            if (Input.GetKey("w"))
-            {
-                this.addForce(0.0f, 1.0f);
-                direction.y += 1;
-            }
-            if (Input.GetKey("a"))
-            {
-                facing_left = true;
-                this.addForce(-1.0f, 0.0f);
-                direction.x -= 1;
-            }
-            if (Input.GetKey("s"))
-            {
-                this.addForce(0.0f, -1.0f);
-                direction.y -= 1;
-            }
-            if (Input.GetKey("d"))
-            {
-                facing_left = false;
-                this.addForce(1.0f, 0.0f);
-                direction.x += 1;
-            }
+            horizontal = Input.GetAxisRaw("Horizontal");
+            direction.x += (int) horizontal;
+            vertical = Input.GetAxisRaw("Vertical");
+            direction.y += (int) vertical;
+            facing_left = horizontal < 0;
 
             if (Input.GetKeyDown("space"))
             {
@@ -129,11 +133,19 @@ public class Player : NetworkBehaviour
                 if (Time.time > nextActionTime ) {
                     nextActionTime = Time.time + health_gen_period;
             
-                    health += health_gen_amount;
-                    if (health >= playerMaxHealth()) {
-                        health = 1000.0f;
-                    }
+                    // health += health_gen_amount;
+                    // if (health >= playerMaxHealth()) {
+                    //     health = 1000.0f;
+                    // }
             }
+        }
+    }
+
+    private void LateUpdate() {
+        // Don't go too fast!
+        if (rigidbody.velocity.magnitude > MAX_SPEED)
+        {
+            rigidbody.velocity = rigidbody.velocity.normalized * MAX_SPEED;
         }
     }
 
@@ -160,11 +172,12 @@ public class Player : NetworkBehaviour
         {
             movement.Normalize();
         }
-        this.transform.position += movement * Time.deltaTime * speed_mult;
+        velocity = movement * speed_mult;
+        this.GetComponent<Rigidbody2D>().velocity = velocity;
     }
 
     public void addHit(float dmg) {
-        health -= dmg;
+        // health -= dmg;
 
         if (health < 0)
         {
@@ -207,13 +220,15 @@ public class Player : NetworkBehaviour
     {
         if (alive)
         {
-            GameObject b = bulletPool.GetComponent<BulletPoolScript>().RetrieveBullet();
+            Debug.Log("attempt fire!");
+            GameObject b = bulletPool.GetComponent<BulletPool>().RetrieveBullet();
             if (b != null)
             {
+                Debug.Log("firing bullet!");
                 b.transform.position = this.transform.position;
-                b.GetComponent<Rigidbody2D>().velocity = new Vector3(x * 10, y * 10, 0);
-                b.GetComponent<BulletScript>().owner = this.gameObject;
-                b.GetComponent<BulletScript>().ownerId = networkIdentity.netId;
+                b.GetComponent<Rigidbody2D>().velocity = new Vector3(velocity.x + x * 10, velocity.y + y * 10, 0);
+                b.GetComponent<Bullet>().owner = this.gameObject;
+                b.GetComponent<Bullet>().ownerId = networkIdentity.netId;
             }
         }
     }
