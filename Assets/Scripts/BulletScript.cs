@@ -44,7 +44,7 @@ public class BulletScript : NetworkBehaviour
         {
             if (collision.gameObject != owner && collision.gameObject.CompareTag("Player"))
             {
-                collision.gameObject.GetComponent<Player>().CmdTakeDamageFromPlayer(1, ownerId);
+                collision.gameObject.GetComponent<PlayerCharacter>().CmdTakeDamageFromPlayer(1, ownerId);
                 CmdDespawnBullet();
             }
         }

@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 
-public class RuleManagerScript : NetworkBehaviour
+public class RuleManager : NetworkBehaviour
 {
     [SerializeField] GameObject networkManager;
     [SerializeField] GameObject playerNameText;
@@ -113,7 +113,7 @@ public class RuleManagerScript : NetworkBehaviour
         }
         PlayerServerStats s = new PlayerServerStats(p);
         playerServerStats.Add(s);
-        p.GetComponent<Player>().stats = s;
+        p.GetComponent<PlayerIdentity>().stats = s;
 
         NetworkInstanceId[] playerIds = new NetworkInstanceId[playerServerStats.Count];
         int[] scores = new int[playerServerStats.Count];
@@ -162,9 +162,9 @@ public class RuleManagerScript : NetworkBehaviour
                     s.respawnTimer -= Time.deltaTime;
                 } else
                 {
-                    if (!s.player.GetComponent<Player>().IsAlive())
+                    if (!s.player.GetComponent<PlayerCharacter>().IsAlive())
                     {
-                        s.player.GetComponent<Player>().CmdRespawnPlayer(GetSpawnPoint());
+                        s.player.GetComponent<PlayerCharacter>().CmdRespawnPlayer(GetSpawnPoint());
                     }
                 }
             }

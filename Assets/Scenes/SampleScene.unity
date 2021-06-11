@@ -702,7 +702,7 @@ MonoBehaviour:
   m_ScriptCRCCheck: 1
   m_MaxDelay: 0.01
   m_LogLevel: 2
-  m_PlayerPrefab: {fileID: 2460394721927346056, guid: 25b386db0f223da4388583ff21e7055b,
+  m_PlayerPrefab: {fileID: 2460394721927346056, guid: 3d73f54beee10d644a2de3093dff0f47,
     type: 3}
   m_AutoCreatePlayer: 1
   m_PlayerSpawnMethod: 1
@@ -1007,11 +1007,7 @@ MonoBehaviour:
   playerNameText: {fileID: 651328013}
   scoreText: {fileID: 979124651}
   winnerText: {fileID: 462449159}
-  respawnPoints:
-  - {fileID: 1742709088}
-  - {fileID: 1889878668}
-  - {fileID: 1138212974}
-  - {fileID: 1989009456}
+  respawnPoints: []
 --- !u!4 &1209380119
 Transform:
   m_ObjectHideFlags: 0

@@ -91,7 +91,7 @@ public class NetController : MonoBehaviour {
 		GameObject playerObject = Instantiate(playerPrefab, randomPos, Quaternion.identity) as GameObject;
 		playerObject.name = player_name;
 
-		Player playBoi = playerObject.GetComponent<Player>();
+		PlayerIdentity playBoi = playerObject.GetComponent<PlayerIdentity>();
 
 		players.Add(player_name, playBoi);
 
@@ -133,7 +133,7 @@ public class NetController : MonoBehaviour {
 				KeysToVirtual keys = curPlayer.AddComponent<KeysToVirtual>();
 				keys.horizontalString = inputStringsVertical[i];
 				keys.verticalString = inputStringsHorizontal[i];
-				keys.toBeControlled = curPlayer.GetComponent<Player>();
+				keys.toBeControlled = curPlayer.GetComponent<PlayerCharacter>();
 
 				inputStringsHorizontal.RemoveAt(i);
 				inputStringsVertical.RemoveAt(i);
