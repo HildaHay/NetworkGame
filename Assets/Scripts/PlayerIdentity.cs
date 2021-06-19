@@ -11,8 +11,6 @@ public class PlayerIdentity : NetworkBehaviour
 
     [SerializeField] GameObject CharacterPrefab;
 
-    //[SyncVar]
-    GameObject CharacterObject;
     public PlayerCharacter Character;
 
     //private bool facing_left = true;
@@ -21,38 +19,6 @@ public class PlayerIdentity : NetworkBehaviour
     //public GameObject bulletPool;
     public RuleManager ruleManager;
     public PlayerServerStats stats; // how is this handled on client?
-
-    //[SyncVar] int health;
-    //[SyncVar] bool alive;
-
-    // private float health = 1000.0f;         // in ml of blood
-
-    //[TooltipAttribute("Health Multiplyer")]
-    //public float health_mult = 1.0f;
-
-    //[Tooltip("Health regen amount (in ml of blood)")]
-    //public float health_gen_amount = 10;   // in ml of blood
-    //private float health_gen_period = 1;    // in seconds
-
-    //[TooltipAttribute("Speed Multiplyer")]
-    //public float speed_mult = 10.0f;
-    //private int death_count = 0;
-
-    //private PlayerState current_player_state;
-    //private PlayerState last_player_state;
-    //private float player_state_updated_at;
-
-    //private WeaponState current_weapon_state;
-    //private WeaponState last_weapon_state;
-    //private float weapon_state_updated_at;
-    //private float nextActionTime = 0.0f;
-
-    //Vector2Int direction = new Vector2Int( 1, 0 );
-    //private Vector3 velocity = new Vector3();
-    //private Rigidbody2D rigidbody;
-    //private float horizontal;
-    //private float vertical;
-    //private float moveLimiter = 0.7f;
 
     // Start is called before the first frame update
     void Start()
@@ -73,9 +39,15 @@ public class PlayerIdentity : NetworkBehaviour
     [Command]
     void CmdSpawnPlayerCharacter()
     {
-        CharacterObject = Instantiate(CharacterPrefab);
-        Character = CharacterObject.GetComponent<PlayerCharacter>();
-        NetworkServer.SpawnWithClientAuthority(CharacterObject, networkIdentity.connectionToClient);
+        GameObject newCharacterObj = Instantiate(CharacterPrefab);
+        NetworkServer.SpawnWithClientAuthority(newCharacterObj, networkIdentity.connectionToClient);
+        RpcLinkCharacter(newCharacterObj);
+    }
+
+    [ClientRpc]
+    void RpcLinkCharacter(GameObject characterObject)
+    {
+        //Character = characterObject.GetComponent<PlayerCharacter>();
     }
 
 	void FixedUpdate () {

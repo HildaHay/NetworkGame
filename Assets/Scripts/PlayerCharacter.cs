@@ -115,7 +115,8 @@ public class PlayerCharacter : NetworkBehaviour
         {
             fetchSpriteRenderer();
         }
-        if (networkIdentity.isLocalPlayer && alive && ruleManager.GameRunning())
+        //if (networkIdentity.isLocalPlayer && alive && ruleManager.GameRunning())
+        if (networkIdentity.hasAuthority && alive && ruleManager.GameRunning())
         {
             horizontal = Input.GetAxisRaw("Horizontal");
             direction.x += (int) horizontal;
