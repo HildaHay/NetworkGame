@@ -40,8 +40,9 @@ public class BulletScript : NetworkBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if(isServer)
+        if (isServer)
         {
+            Debug.Log("aeohaegrhage");
             if (collision.gameObject != owner && collision.gameObject.CompareTag("Player"))
             {
                 collision.gameObject.GetComponent<PlayerCharacter>().CmdTakeDamageFromPlayer(1, ownerId);

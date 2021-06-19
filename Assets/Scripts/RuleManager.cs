@@ -111,6 +111,7 @@ public class RuleManager : NetworkBehaviour
         {
             playerServerStats = new List<PlayerServerStats>();
         }
+
         PlayerServerStats s = new PlayerServerStats(p);
         playerServerStats.Add(s);
         p.GetComponent<PlayerIdentity>().stats = s;
@@ -186,7 +187,6 @@ public class RuleManager : NetworkBehaviour
         {
             if(p.score >= pointsToWin)
             {
-                Debug.Log("eeeee");
                 winner = p;
             }
         }

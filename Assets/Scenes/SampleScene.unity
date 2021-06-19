@@ -1008,7 +1008,11 @@ MonoBehaviour:
   playerNameText: {fileID: 651328013}
   scoreText: {fileID: 979124651}
   winnerText: {fileID: 462449159}
-  respawnPoints: []
+  respawnPoints:
+  - {fileID: 1742709088}
+  - {fileID: 1889878668}
+  - {fileID: 1138212974}
+  - {fileID: 1989009456}
 --- !u!4 &1209380119
 Transform:
   m_ObjectHideFlags: 0

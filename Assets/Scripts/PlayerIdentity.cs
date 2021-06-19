@@ -47,7 +47,8 @@ public class PlayerIdentity : NetworkBehaviour
     [ClientRpc]
     void RpcLinkCharacter(GameObject characterObject)
     {
-        //Character = characterObject.GetComponent<PlayerCharacter>();
+        Character = characterObject.GetComponent<PlayerCharacter>();
+        characterObject.GetComponent<PlayerCharacter>().playerIdentity = this.gameObject;
     }
 
 	void FixedUpdate () {

@@ -19,6 +19,9 @@ public class PlayerCharacter : NetworkBehaviour
         Broken      // Player cannot shoot or reload
     }
 
+    public GameObject playerIdentity;
+    NetworkInstanceId playerNetId;
+
     NetworkIdentity networkIdentity;
 
     public Vector2 virtualJoystick = new Vector2(0, 0);
@@ -79,6 +82,8 @@ public class PlayerCharacter : NetworkBehaviour
         {
             InitHealth();
         }
+
+        playerNetId = playerIdentity.GetComponent<NetworkIdentity>().netId;
     }
 
 	void FixedUpdate () {
@@ -231,7 +236,7 @@ public class PlayerCharacter : NetworkBehaviour
                 b.transform.position = this.transform.position;
                 b.GetComponent<Rigidbody2D>().velocity = new Vector3(velocity.x + x * 10, velocity.y + y * 10, 0);
                 b.GetComponent<BulletScript>().owner = this.gameObject;
-                b.GetComponent<BulletScript>().ownerId = networkIdentity.netId;
+                b.GetComponent<BulletScript>().ownerId = playerNetId;
             }
         }
     }
@@ -252,7 +257,7 @@ public class PlayerCharacter : NetworkBehaviour
         if (alive)
         {
             alive = false;
-            ruleManager.CmdPlayerKilled(networkIdentity.netId, attackerID);
+            ruleManager.CmdPlayerKilled(playerNetId, attackerID);
             RpcDie();
         }
     }

@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 4051630232029396423}
   m_Layer: 0
   m_Name: PlayerIdentity
-  m_TagString: Player
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -142,4 +142,5 @@ MonoBehaviour:
   virtualJoystick: {x: 0, y: 0}
   CharacterPrefab: {fileID: 2460394721927346056, guid: 25b386db0f223da4388583ff21e7055b,
     type: 3}
+  Character: {fileID: 0}
   ruleManager: {fileID: 0}
