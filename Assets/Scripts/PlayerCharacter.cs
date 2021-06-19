@@ -21,7 +21,7 @@ public class PlayerCharacter : NetworkBehaviour
 
     NetworkIdentity networkIdentity;
 
-    // public Vector2 virtualJoystick = new Vector2(0, 0);
+    public Vector2 virtualJoystick = new Vector2(0, 0);
 
     private bool facing_left = true;
     private SpriteRenderer m_sprite;
@@ -82,19 +82,19 @@ public class PlayerCharacter : NetworkBehaviour
     }
 
 	void FixedUpdate () {
-  //      if (alive && ruleManager.GameRunning())
-  //      {
-  //          if (virtualJoystick.x < 0)
-  //          {
-  //              facing_left = true;
-  //          }
-  //          else if (virtualJoystick.x > 0)
-  //          {
-  //              facing_left = false;
-  //          }
-  //          addForce(virtualJoystick.x, virtualJoystick.y);
-  //      }
-		//addForce(virtualJoystick.x, virtualJoystick.y);
+        if (alive && ruleManager.GameRunning())
+        {
+            if (virtualJoystick.x < 0)
+            {
+                facing_left = true;
+            }
+            else if (virtualJoystick.x > 0)
+            {
+                facing_left = false;
+            }
+            addForce(virtualJoystick.x, virtualJoystick.y);
+        }
+        addForce(virtualJoystick.x, virtualJoystick.y);
 
         if (horizontal != 0 && vertical != 0) { // Check for diagonal movement
             // limit movement speed diagonally, so you move at 70% speed
@@ -157,7 +157,7 @@ public class PlayerCharacter : NetworkBehaviour
     }
 
     public void addVirtualForce(float x_axis, float y_axis) {
-        //virtualJoystick = new Vector2(x_axis, y_axis);
+        virtualJoystick = new Vector2(x_axis, y_axis);
     }
 
     public void addForce(float x_axis, float y_axis) {

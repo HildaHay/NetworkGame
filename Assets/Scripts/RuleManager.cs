@@ -162,9 +162,9 @@ public class RuleManager : NetworkBehaviour
                     s.respawnTimer -= Time.deltaTime;
                 } else
                 {
-                    if (!s.player.GetComponent<PlayerCharacter>().IsAlive())
+                    if (!s.player.GetComponent<PlayerIdentity>().Character.IsAlive())
                     {
-                        s.player.GetComponent<PlayerCharacter>().CmdRespawnPlayer(GetSpawnPoint());
+                        s.player.GetComponent<PlayerIdentity>().Character.CmdRespawnPlayer(GetSpawnPoint());
                     }
                 }
             }

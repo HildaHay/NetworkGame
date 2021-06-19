@@ -11,7 +11,7 @@ public class PlayerIdentity : NetworkBehaviour
 
     [SerializeField] GameObject CharacterPrefab;
 
-    [SyncVar]
+    //[SyncVar]
     GameObject CharacterObject;
     public PlayerCharacter Character;
 
@@ -74,6 +74,7 @@ public class PlayerIdentity : NetworkBehaviour
     void CmdSpawnPlayerCharacter()
     {
         CharacterObject = Instantiate(CharacterPrefab);
+        Character = CharacterObject.GetComponent<PlayerCharacter>();
         NetworkServer.SpawnWithClientAuthority(CharacterObject, networkIdentity.connectionToClient);
     }
 
