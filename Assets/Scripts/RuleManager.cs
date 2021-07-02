@@ -6,10 +6,18 @@ using UnityEngine.UI;
 
 public class RuleManager : NetworkBehaviour
 {
+    private enum RoundStatus
+    {
+        Setup,
+        InRound,
+        PostRound
+    }
+
     [SerializeField] GameObject networkManager;
     [SerializeField] GameObject playerNameText;
     [SerializeField] GameObject scoreText;
     [SerializeField] GameObject winnerText;
+    [SerializeField] GameObject startRoundButton;
 
     [SerializeField] GameObject[] respawnPoints;
 
@@ -18,30 +26,48 @@ public class RuleManager : NetworkBehaviour
 
     List<PlayerLocalStats> playerLocalStats;    // Stored on each client, this simply mirrors the values in playerServerStats for UI display
 
-    int baseHealth = 5;
+    List<PlayerIdentity> playerIdentities;
+
+    int baseHealth = 1;
     int baseDamage = 1;
     float respawnTime = 2.0f;
-    int pointsToWin = 5;
+    int pointsToWin = 1;
+
+    //[SyncVar]
+    //bool gameRunning;
 
     [SyncVar]
-    bool gameRunning;
+    RoundStatus roundStatus;
+
+    float PostRoundTimer;
 
     // Start is called before the first frame update
     void Start()
     {
         if (isServer)
         {
-            //gameRunning = false;
+
+        } else
+        {
+            startRoundButton.SetActive(false);
         }
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (isServer && gameRunning)
+        //if (isServer && gameRunning)
+        if (isServer && roundStatus == RoundStatus.InRound)
         {
             UpdateRespawnTimers();
             CheckForWinner();
+        } else if(isServer && roundStatus == RoundStatus.PostRound)
+        {
+            PostRoundTimer -= Time.deltaTime;
+            if(PostRoundTimer < 0)
+            {
+                BeginSetup();
+            }
         }
         DisplayScore();
     }
@@ -53,19 +79,24 @@ public class RuleManager : NetworkBehaviour
 
     public void ServerSetup()
     {
-        gameRunning = true;
+        //gameRunning = false;
+        BeginSetup();
+
         if (playerServerStats == null)
         {
             playerServerStats = new List<PlayerServerStats>();
         }
+
+        playerIdentities = new List<PlayerIdentity>();
     }
 
     public void ServerShutdown()
     {
-        gameRunning = false;
+        roundStatus = RoundStatus.Setup;
         playerServerStats = null;
         playerLocalStats = null;
         winnerText.GetComponent<Text>().text = "";
+        startRoundButton.SetActive(false);
     }
 
     public void ClientSetup()
@@ -104,32 +135,67 @@ public class RuleManager : NetworkBehaviour
         }
     }
 
+    void InitializeStats()
+    {
+        //if (playerServerStats == null)
+        //{
+            playerServerStats = new List<PlayerServerStats>();
+        //}
+
+        Debug.Log("Initialized stats " + playerIdentities.Count);
+
+        foreach (PlayerIdentity p in playerIdentities)
+        {
+            //if(p.Character != null)
+            //{
+                PlayerServerStats s = new PlayerServerStats(p.gameObject);
+                playerServerStats.Add(s);
+                p.GetComponent<PlayerIdentity>().stats = s;
+
+            //}
+        }
+
+        foreach (PlayerIdentity p in playerIdentities)
+        {
+            //if (p.Character != null)
+            //{
+                NetworkInstanceId[] playerIds = new NetworkInstanceId[playerServerStats.Count];
+                int[] scores = new int[playerServerStats.Count];
+
+                for (int i = 0; i < playerServerStats.Count; i++)
+                {
+                    playerIds[i] = playerServerStats[i].playerId;
+                    scores[i] = playerServerStats[i].score;
+                }
+
+                RpcInitLocalStats(playerIds, scores);
+            //}
+        }
+    }
+
     // Called on server when a new player joins
     public void AddPlayer(GameObject p)
     {
-        if(playerServerStats == null)
-        {
-            playerServerStats = new List<PlayerServerStats>();
-        }
+        playerIdentities.Add(p.GetComponent<PlayerIdentity>());
 
-        PlayerServerStats s = new PlayerServerStats(p);
-        playerServerStats.Add(s);
-        p.GetComponent<PlayerIdentity>().stats = s;
+        //PlayerServerStats s = new PlayerServerStats(p);
+        //playerServerStats.Add(s);
+        //p.GetComponent<PlayerIdentity>().stats = s;
 
-        NetworkInstanceId[] playerIds = new NetworkInstanceId[playerServerStats.Count];
-        int[] scores = new int[playerServerStats.Count];
+        //NetworkInstanceId[] playerIds = new NetworkInstanceId[playerServerStats.Count];
+        //int[] scores = new int[playerServerStats.Count];
 
-        for(int i = 0; i < playerServerStats.Count; i++)
-        {
-            playerIds[i] = playerServerStats[i].playerId;
-            scores[i] = playerServerStats[i].score;
-        }
+        //for(int i = 0; i < playerServerStats.Count; i++)
+        //{
+        //    playerIds[i] = playerServerStats[i].playerId;
+        //    scores[i] = playerServerStats[i].score;
+        //}
 
-        RpcAddPlayer(playerIds, scores);
+        //RpcAddPlayer(playerIds, scores);
     }
 
     [ClientRpc]
-    public void RpcAddPlayer(NetworkInstanceId[] ids, int[] scores)
+    public void RpcInitLocalStats(NetworkInstanceId[] ids, int[] scores)
     {
         playerLocalStats = new List<PlayerLocalStats>();
 
@@ -177,7 +243,7 @@ public class RuleManager : NetworkBehaviour
 
     public bool GameRunning()
     {
-        return gameRunning;
+        return roundStatus == RoundStatus.InRound;
     }
 
     void CheckForWinner()
@@ -195,18 +261,54 @@ public class RuleManager : NetworkBehaviour
             return;
         } else
         {
-            EndGame(true, winner);
+            EndRound(true, winner);
         }
     }
 
-    void EndGame(bool gameWon, PlayerServerStats winningPlayer)
+    void BeginSetup()
+    {
+        if (isServer)
+        {
+            RpcHideWinnerText();
+        }
+        startRoundButton.SetActive(true);
+        roundStatus = RoundStatus.Setup;
+    }
+
+    public void StartRound()
+    {
+        startRoundButton.SetActive(false);
+        roundStatus = RoundStatus.InRound;
+        foreach(PlayerIdentity p in playerIdentities)
+        {
+            p.StartRound();
+        }
+
+        InitializeStats();
+    }
+
+    void EndRound(bool roundWon, PlayerServerStats winningPlayer)
     {
         Debug.Log("Ending game");
-        gameRunning = false;
-        if(gameWon)
+        //gameRunning = false;
+        roundStatus = RoundStatus.PostRound;
+        PostRoundTimer = 10.0f;
+        if (roundWon)
         {
             RpcDisplayWinner(winningPlayer);
+        } else
+        {
+            RpcDisplayNoWinner();
         }
+        foreach(PlayerIdentity p in playerIdentities)
+        {
+            p.CmdDestroyCharacterObject();
+        }
+    }
+
+    public void AbortRound()
+    {
+        EndRound(false, null);
     }
 
     public int GetBaseHealth()
@@ -254,6 +356,18 @@ public class RuleManager : NetworkBehaviour
     public void RpcDisplayWinner(PlayerServerStats winner)
     {
         winnerText.GetComponent<Text>().text = winner.playerId + " won!";
+    }
+
+    [ClientRpc]
+    public void RpcDisplayNoWinner()
+    {
+        winnerText.GetComponent<Text>().text = "No winner";
+    }
+
+    [ClientRpc]
+    public void RpcHideWinnerText()
+    {
+        winnerText.GetComponent<Text>().text = "";
     }
 }
 

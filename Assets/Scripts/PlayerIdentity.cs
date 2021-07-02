@@ -33,6 +33,33 @@ public class PlayerIdentity : NetworkBehaviour
     {
         networkIdentity = this.GetComponent<NetworkIdentity>();
 
+        // StartRound();
+    }
+
+    public void StartRound()
+    {
+        //if (hasAuthority)
+        //{
+            CreateCharacterObject();
+        //}
+    }
+
+    public void EndRound()
+    {
+        if(hasAuthority)
+        {
+
+        }
+    }
+
+    [Command]
+    public void CmdDestroyCharacterObject()
+    {
+        NetworkServer.Destroy(Character.gameObject);
+    }
+
+    void CreateCharacterObject()
+    {
         CmdSpawnPlayerCharacter();
     }
 
