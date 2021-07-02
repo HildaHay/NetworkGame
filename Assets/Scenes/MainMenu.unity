@@ -579,7 +579,7 @@ MonoBehaviour:
       - m_Target: {fileID: -4981274992453522637, guid: efb5652e161d7ef4fb10cd9fd790a0d0,
           type: 3}
         m_TargetAssemblyTypeName: SceneSwitcher, Assembly-CSharp
-        m_MethodName: TestingScene
+        m_MethodName: MultiplayerScene
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

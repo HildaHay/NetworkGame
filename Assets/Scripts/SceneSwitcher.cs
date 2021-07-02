@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 
 public class SceneSwitcher: MonoBehaviour {
     public void MultiplayerScene() {
-        SceneManager.LoadScene("MultiplayerScene");
+        SceneManager.LoadScene("Multiplayer");
     }
     public void TestingScene() {
         SceneManager.LoadScene("SampleScene");
