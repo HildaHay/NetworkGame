@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class BulletScript : NetworkBehaviour
+public class Bullet : NetworkBehaviour
 {
     bool isActive = false;
     float lifetime;
@@ -11,6 +11,9 @@ public class BulletScript : NetworkBehaviour
     public GameObject bulletPool;
     public GameObject owner;
     public NetworkInstanceId ownerId;
+
+    [TooltipAttribute("Speed Multiplier of the bullet (maybe based on bullet shape?)")]
+    public float speed_mult = 10.0f;
 
     // Start is called before the first frame update
     void Start()
@@ -27,6 +30,7 @@ public class BulletScript : NetworkBehaviour
             // Destroy(this.gameObject);
             if (isServer)
             {
+                Debug.Log("NO HIT!");
                 CmdDespawnBullet();
             }
         }
@@ -42,11 +46,11 @@ public class BulletScript : NetworkBehaviour
     {
         if (isServer)
         {
-            Debug.Log("aeohaegrhage");
             if (collision.gameObject != owner && collision.gameObject.CompareTag("Player"))
             {
                 collision.gameObject.GetComponent<PlayerCharacter>().CmdTakeDamageFromPlayer(1, ownerId);
                 CmdDespawnBullet();
+                // collision.gameObject.GetComponent<Player>().addHit(10.0f);
             }
         }
     }
@@ -54,7 +58,7 @@ public class BulletScript : NetworkBehaviour
     [Command]
     void CmdDespawnBullet()
     {
-        bulletPool.GetComponent<BulletPoolScript>().ReturnBullet(this.gameObject);
+        bulletPool.GetComponent<BulletPool>().ReturnBullet(this.gameObject);
         GetComponent<Rigidbody2D>().velocity = new Vector3(0, 0, 0);
         isActive = false;
     }
