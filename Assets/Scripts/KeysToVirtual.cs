@@ -5,7 +5,7 @@ using UnityEngine;
 public class KeysToVirtual : MonoBehaviour {
     public string horizontalString;
     public string verticalString;
-    public Player toBeControlled;
+    public PlayerCharacter toBeControlled;
 	
 	// Update is called once per frame
 	void Update () {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class Player : NetworkBehaviour
+public class PlayerCharacter : NetworkBehaviour
 {
     private const float MAX_SPEED = 5.0f;
     private enum PlayerState
@@ -19,6 +19,9 @@ public class Player : NetworkBehaviour
         Broken      // Player cannot shoot or reload
     }
 
+    public GameObject playerIdentity;
+    NetworkInstanceId playerNetId;
+
     NetworkIdentity networkIdentity;
 
     public Vector2 virtualJoystick = new Vector2(0, 0);
@@ -28,7 +31,7 @@ public class Player : NetworkBehaviour
 
     public GameObject bulletPool;
     public RuleManager ruleManager;
-    public PlayerServerStats stats; // how is this handled on client?
+    //public PlayerServerStats stats; // how is this handled on client?
 
     [SyncVar] int health;
     [SyncVar] bool alive;
@@ -73,10 +76,13 @@ public class Player : NetworkBehaviour
 
         ruleManager = GameObject.Find("RuleManager").GetComponent<RuleManager>();
 
+        bulletPool = GameObject.Find("BulletPool");
+
         if (NetworkServer.active)
         {
             InitHealth();
         }
+
     }
 
 	void FixedUpdate () {
@@ -92,7 +98,7 @@ public class Player : NetworkBehaviour
             }
             addForce(virtualJoystick.x, virtualJoystick.y);
         }
-		addForce(virtualJoystick.x, virtualJoystick.y);
+        addForce(virtualJoystick.x, virtualJoystick.y);
 
         if (horizontal != 0 && vertical != 0) { // Check for diagonal movement
             // limit movement speed diagonally, so you move at 70% speed
@@ -113,7 +119,8 @@ public class Player : NetworkBehaviour
         {
             fetchSpriteRenderer();
         }
-        if (networkIdentity.isLocalPlayer && alive && ruleManager.GameRunning())
+        //if (networkIdentity.isLocalPlayer && alive && ruleManager.GameRunning())
+        if (networkIdentity.hasAuthority && alive && ruleManager.GameRunning())
         {
             horizontal = Input.GetAxisRaw("Horizontal");
             direction.x += (int) horizontal;
@@ -139,6 +146,12 @@ public class Player : NetworkBehaviour
                     // }
             }
         }
+    }
+
+    public void ConnectPlayerIdentity(GameObject pid)
+    {
+        playerIdentity = pid;
+        playerNetId = playerIdentity.GetComponent<NetworkIdentity>().netId;
     }
 
     private void LateUpdate() {
@@ -228,7 +241,7 @@ public class Player : NetworkBehaviour
                 b.transform.position = this.transform.position;
                 b.GetComponent<Rigidbody2D>().velocity = new Vector3(velocity.x + x * 10, velocity.y + y * 10, 0);
                 b.GetComponent<Bullet>().owner = this.gameObject;
-                b.GetComponent<Bullet>().ownerId = networkIdentity.netId;
+                b.GetComponent<Bullet>().ownerId = playerNetId;
             }
         }
     }
@@ -249,7 +262,7 @@ public class Player : NetworkBehaviour
         if (alive)
         {
             alive = false;
-            ruleManager.CmdPlayerKilled(networkIdentity.netId, attackerID);
+            ruleManager.CmdPlayerKilled(playerNetId, attackerID);
             RpcDie();
         }
     }

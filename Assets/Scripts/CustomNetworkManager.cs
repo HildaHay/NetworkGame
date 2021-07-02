@@ -36,7 +36,7 @@ public class CustomNetworkManager : NetworkManager
 
     void InitializePlayer(GameObject p)
     {
-        p.GetComponent<Player>().bulletPool = bulletPool;
+        //p.GetComponent<PlayerCharacter>().bulletPool = bulletPool;
         ruleManager.GetComponent<RuleManager>().AddPlayer(p);
     }
 

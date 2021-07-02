@@ -44,12 +44,11 @@ public class Bullet : NetworkBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if(isServer)
+        if (isServer)
         {
             if (collision.gameObject != owner && collision.gameObject.CompareTag("Player"))
             {
-                Debug.Log("collision!");
-                collision.gameObject.GetComponent<Player>().CmdTakeDamageFromPlayer(1, ownerId);
+                collision.gameObject.GetComponent<PlayerCharacter>().CmdTakeDamageFromPlayer(1, ownerId);
                 CmdDespawnBullet();
                 // collision.gameObject.GetComponent<Player>().addHit(10.0f);
             }

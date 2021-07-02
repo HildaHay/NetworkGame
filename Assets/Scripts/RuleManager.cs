@@ -111,9 +111,10 @@ public class RuleManager : NetworkBehaviour
         {
             playerServerStats = new List<PlayerServerStats>();
         }
+
         PlayerServerStats s = new PlayerServerStats(p);
         playerServerStats.Add(s);
-        p.GetComponent<Player>().stats = s;
+        p.GetComponent<PlayerIdentity>().stats = s;
 
         NetworkInstanceId[] playerIds = new NetworkInstanceId[playerServerStats.Count];
         int[] scores = new int[playerServerStats.Count];
@@ -162,9 +163,12 @@ public class RuleManager : NetworkBehaviour
                     s.respawnTimer -= Time.deltaTime;
                 } else
                 {
-                    if (!s.player.GetComponent<Player>().IsAlive())
+                    if (s.player.GetComponent<PlayerIdentity>().Character != null)
                     {
-                        s.player.GetComponent<Player>().CmdRespawnPlayer(GetSpawnPoint());
+                        if (!s.player.GetComponent<PlayerIdentity>().Character.IsAlive())
+                        {
+                            s.player.GetComponent<PlayerIdentity>().Character.CmdRespawnPlayer(GetSpawnPoint());
+                        }
                     }
                 }
             }
@@ -183,7 +187,6 @@ public class RuleManager : NetworkBehaviour
         {
             if(p.score >= pointsToWin)
             {
-                Debug.Log("eeeee");
                 winner = p;
             }
         }
