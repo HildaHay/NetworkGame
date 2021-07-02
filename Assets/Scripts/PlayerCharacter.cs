@@ -83,7 +83,6 @@ public class PlayerCharacter : NetworkBehaviour
             InitHealth();
         }
 
-        playerNetId = playerIdentity.GetComponent<NetworkIdentity>().netId;
     }
 
 	void FixedUpdate () {
@@ -147,6 +146,12 @@ public class PlayerCharacter : NetworkBehaviour
                     // }
             }
         }
+    }
+
+    public void ConnectPlayerIdentity(GameObject pid)
+    {
+        playerIdentity = pid;
+        playerNetId = playerIdentity.GetComponent<NetworkIdentity>().netId;
     }
 
     private void LateUpdate() {
@@ -229,14 +234,14 @@ public class PlayerCharacter : NetworkBehaviour
         if (alive)
         {
             Debug.Log("attempt fire!");
-            GameObject b = bulletPool.GetComponent<BulletPoolScript>().RetrieveBullet();
+            GameObject b = bulletPool.GetComponent<BulletPool>().RetrieveBullet();
             if (b != null)
             {
                 Debug.Log("firing bullet!");
                 b.transform.position = this.transform.position;
                 b.GetComponent<Rigidbody2D>().velocity = new Vector3(velocity.x + x * 10, velocity.y + y * 10, 0);
-                b.GetComponent<BulletScript>().owner = this.gameObject;
-                b.GetComponent<BulletScript>().ownerId = playerNetId;
+                b.GetComponent<Bullet>().owner = this.gameObject;
+                b.GetComponent<Bullet>().ownerId = playerNetId;
             }
         }
     }
