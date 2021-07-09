@@ -47,6 +47,12 @@ public class CustomNetworkManager : NetworkManager
             NetworkServer.Destroy(player.gameObject);
     }
 
+    public override void OnServerDisconnect(NetworkConnection conn)
+    {
+        base.OnServerDisconnect(conn);
+        ruleManager.GetComponent<RuleManager>().CleanupDisconnectedPlayers();
+    }
+
     public override void OnStartHost()
     {
         Debug.Log("Host has started");

@@ -55,7 +55,13 @@ public class PlayerIdentity : NetworkBehaviour
     [Command]
     public void CmdDestroyCharacterObject()
     {
-        NetworkServer.Destroy(Character.gameObject);
+        if (Character != null)
+        {
+            if (Character.gameObject != null)
+            {
+                NetworkServer.Destroy(Character.gameObject);
+            }
+        }
     }
 
     void CreateCharacterObject()

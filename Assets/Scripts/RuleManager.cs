@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
+using TMPro;
 
 public class RuleManager : NetworkBehaviour
 {
@@ -14,10 +15,14 @@ public class RuleManager : NetworkBehaviour
     }
 
     [SerializeField] GameObject networkManager;
-    [SerializeField] GameObject playerNameText;
-    [SerializeField] GameObject scoreText;
+    [SerializeField] GameObject scoreboardPlayerText;
+    [SerializeField] GameObject scoreboardScoreText;
+    [SerializeField] GameObject postRoundPlayerText;
+    [SerializeField] GameObject postRoundScoreText;
     [SerializeField] GameObject winnerText;
+
     [SerializeField] GameObject startRoundButton;
+    [SerializeField] GameObject pointsToWinInput;
 
     [SerializeField] GameObject[] respawnPoints;
 
@@ -69,7 +74,7 @@ public class RuleManager : NetworkBehaviour
                 BeginSetup();
             }
         }
-        DisplayScore();
+        DisplayScoreInRound();
     }
     
     List<GameObject> ConnectedPlayerList()
@@ -110,28 +115,49 @@ public class RuleManager : NetworkBehaviour
         winnerText.GetComponent<Text>().text = "";
     }
 
-    void DisplayScore()
+    string[] GetScoreboardText()
+    {
+        string pt = "";
+        string st = "";
+
+        if (playerLocalStats != null)
+        {
+            foreach (PlayerLocalStats ls in playerLocalStats)
+            {
+                pt += "Player " + ls.playerId.ToString() + "\n";
+                st += ls.score + "\n";
+            }
+        }
+
+        return new string[] { pt, st };
+    }
+
+    void DisplayScoreInRound()
     {
         if (NetworkClient.active)
         {
-            List<GameObject> player = ConnectedPlayerList();
-            string pt = "";
-            string st = "";
-            if (playerLocalStats != null)
-            {
-                foreach (PlayerLocalStats ls in playerLocalStats)
-                {
-                    pt += "Player " + ls.playerId.ToString() + "\n";
-                    st += ls.score + "\n";
-                }
-            }
+            //List<GameObject> player = ConnectedPlayerList();
+            //string pt = "";
+            //string st = "";
+            //if (playerLocalStats != null)
+            //{
+            //    foreach (PlayerLocalStats ls in playerLocalStats)
+            //    {
+            //        pt += "Player " + ls.playerId.ToString() + "\n";
+            //        st += ls.score + "\n";
+            //    }
+            //}
 
-            playerNameText.GetComponent<Text>().text = pt;
-            scoreText.GetComponent<Text>().text = st;
+            //scoreboardPlayerText.GetComponent<Text>().text = pt;
+            //scoreboardScoreText.GetComponent<Text>().text = st;
+
+            string[] scoreboardText = GetScoreboardText();
+            scoreboardPlayerText.GetComponent<Text>().text = scoreboardText[0];
+            scoreboardScoreText.GetComponent<Text>().text = scoreboardText[1];
         } else
         {
-            playerNameText.GetComponent<Text>().text = "";
-            scoreText.GetComponent<Text>().text = "";
+            scoreboardPlayerText.GetComponent<Text>().text = "";
+            scoreboardScoreText.GetComponent<Text>().text = "";
         }
     }
 
@@ -142,23 +168,21 @@ public class RuleManager : NetworkBehaviour
             playerServerStats = new List<PlayerServerStats>();
         //}
 
-        Debug.Log("Initialized stats " + playerIdentities.Count);
-
-        foreach (PlayerIdentity p in playerIdentities)
+        foreach(PlayerIdentity p in playerIdentities)
         {
-            //if(p.Character != null)
-            //{
+            if(p != null)
+            {
                 PlayerServerStats s = new PlayerServerStats(p.gameObject);
                 playerServerStats.Add(s);
                 p.GetComponent<PlayerIdentity>().stats = s;
 
-            //}
+            }
         }
 
-        foreach (PlayerIdentity p in playerIdentities)
+        foreach(PlayerIdentity p in playerIdentities)
         {
-            //if (p.Character != null)
-            //{
+            if (p != null)
+            {
                 NetworkInstanceId[] playerIds = new NetworkInstanceId[playerServerStats.Count];
                 int[] scores = new int[playerServerStats.Count];
 
@@ -169,7 +193,7 @@ public class RuleManager : NetworkBehaviour
                 }
 
                 RpcInitLocalStats(playerIds, scores);
-            //}
+            }
         }
     }
 
@@ -193,6 +217,18 @@ public class RuleManager : NetworkBehaviour
 
         //RpcAddPlayer(playerIds, scores);
     }
+
+    // this probably doesn't work
+    //public void RemovePlayerById(NetworkInstanceId id)
+    //{
+    //    Debug.Log("Removing disconnected player");
+    //    PlayerIdentity disconnectedPlayer = null;
+    //    foreach(PlayerServerStats ps in playerServerStats)
+    //    {
+
+    //    }
+    //    playerIdentities.Remove();
+    //}
 
     [ClientRpc]
     public void RpcInitLocalStats(NetworkInstanceId[] ids, int[] scores)
@@ -229,11 +265,14 @@ public class RuleManager : NetworkBehaviour
                     s.respawnTimer -= Time.deltaTime;
                 } else
                 {
-                    if (s.player.GetComponent<PlayerIdentity>().Character != null)
+                    if (s.player != null)
                     {
-                        if (!s.player.GetComponent<PlayerIdentity>().Character.IsAlive())
+                        if (s.player.GetComponent<PlayerIdentity>().Character != null)
                         {
-                            s.player.GetComponent<PlayerIdentity>().Character.CmdRespawnPlayer(GetSpawnPoint());
+                            if (!s.player.GetComponent<PlayerIdentity>().Character.IsAlive())
+                            {
+                                s.player.GetComponent<PlayerIdentity>().Character.CmdRespawnPlayer(GetSpawnPoint());
+                            }
                         }
                     }
                 }
@@ -251,7 +290,7 @@ public class RuleManager : NetworkBehaviour
         PlayerServerStats winner = null;
         foreach(PlayerServerStats p in playerServerStats)
         {
-            if(p.score >= pointsToWin)
+            if (p.score >= pointsToWin)
             {
                 winner = p;
             }
@@ -267,21 +306,52 @@ public class RuleManager : NetworkBehaviour
 
     void BeginSetup()
     {
+        startRoundButton.SetActive(true);
+        pointsToWinInput.SetActive(true);
+        pointsToWinInput.GetComponent<TMP_InputField>().text = pointsToWin.ToString();
+
+        roundStatus = RoundStatus.Setup;
         if (isServer)
         {
-            RpcHideWinnerText();
+            //RpcHideWinnerText();
+            RpcBeginSetup();
         }
-        startRoundButton.SetActive(true);
-        roundStatus = RoundStatus.Setup;
+    }
+
+    public void CleanupDisconnectedPlayers()
+    {
+        // This removes players who have disconnected from the playerIdentities list
+        playerIdentities.RemoveAll(item => item == null);
+    }
+
+    [ClientRpc]
+    void RpcBeginSetup()
+    {
+        winnerText.GetComponent<Text>().text = "";
+        postRoundPlayerText.GetComponent<TextMeshProUGUI>().text = "";
+        postRoundScoreText.GetComponent<TextMeshProUGUI>().text = "";
     }
 
     public void StartRound()
     {
+        Debug.Log("Starting round");
         startRoundButton.SetActive(false);
+        pointsToWinInput.SetActive(false);
+
+        CleanupDisconnectedPlayers();   // Just in case there's a 
+
+        int ptw = 10;    // default
+        bool tryParsePtw = int.TryParse(pointsToWinInput.GetComponent<TMP_InputField>().text, out ptw);
+        pointsToWin = ptw;
+
         roundStatus = RoundStatus.InRound;
+
         foreach(PlayerIdentity p in playerIdentities)
         {
-            p.StartRound();
+            if (p != null)
+            {
+                p.StartRound();
+            }
         }
 
         InitializeStats();
@@ -302,8 +372,21 @@ public class RuleManager : NetworkBehaviour
         }
         foreach(PlayerIdentity p in playerIdentities)
         {
-            p.CmdDestroyCharacterObject();
+            if (p != null)
+            {
+                p.CmdDestroyCharacterObject();
+            }
         }
+
+        RpcEndRound();
+    }
+
+    [ClientRpc]
+    void RpcEndRound()
+    {
+        string[] scoreboardText = GetScoreboardText();
+        postRoundPlayerText.GetComponent<TextMeshProUGUI>().text = scoreboardText[0];
+        postRoundScoreText.GetComponent<TextMeshProUGUI>().text = scoreboardText[1];
     }
 
     public void AbortRound()
@@ -364,11 +447,11 @@ public class RuleManager : NetworkBehaviour
         winnerText.GetComponent<Text>().text = "No winner";
     }
 
-    [ClientRpc]
-    public void RpcHideWinnerText()
-    {
-        winnerText.GetComponent<Text>().text = "";
-    }
+    //[ClientRpc]
+    //public void RpcHideWinnerText()
+    //{
+    //    winnerText.GetComponent<Text>().text = "";
+    //}
 }
 
 public class PlayerServerStats
