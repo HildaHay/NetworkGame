@@ -64,6 +64,7 @@ public class PlayerCharacter : NetworkBehaviour
     private float horizontal;
     private float vertical;
     private float moveLimiter = 0.7f;
+    private AudioSource source;
 
     // Start is called before the first frame update
     void Start()
@@ -77,6 +78,7 @@ public class PlayerCharacter : NetworkBehaviour
         ruleManager = GameObject.Find("RuleManager").GetComponent<RuleManager>();
 
         bulletPool = GameObject.Find("BulletPool");
+        source = GetComponent<AudioSource>();
 
         if (NetworkServer.active)
         {
@@ -238,6 +240,8 @@ public class PlayerCharacter : NetworkBehaviour
             if (b != null)
             {
                 Debug.Log("firing bullet!");
+                // play the sound
+                source.Play();
                 b.transform.position = this.transform.position;
                 b.GetComponent<Rigidbody2D>().velocity = new Vector3(velocity.x + x * 10, velocity.y + y * 10, 0);
                 b.GetComponent<Bullet>().owner = this.gameObject;

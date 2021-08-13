@@ -35,6 +35,10 @@ public class RuleManager : NetworkBehaviour
         }
     }
 
+    void Awake() {
+        DisplayScore();
+    }
+
     // Update is called once per frame
     void Update()
     {
@@ -95,12 +99,16 @@ public class RuleManager : NetworkBehaviour
                 }
             }
 
-            playerNameText.GetComponent<Text>().text = pt;
-            scoreText.GetComponent<Text>().text = st;
+            CanvasGroup parentGroup = playerNameText.GetComponentInParent<CanvasGroup>();
+            ShowMenu(parentGroup);
+            playerNameText.GetComponent<TMPro.TMP_Text>().text = pt;
+            scoreText.GetComponent<TMPro.TMP_Text>().text = st;
         } else
         {
-            playerNameText.GetComponent<Text>().text = "";
-            scoreText.GetComponent<Text>().text = "";
+            playerNameText.GetComponent<TMPro.TMP_Text>().text = "";
+            scoreText.GetComponent<TMPro.TMP_Text>().text = "";
+            CanvasGroup parentGroup = playerNameText.GetComponentInParent<CanvasGroup>();
+            HideMenu(parentGroup);
         }
     }
 
@@ -254,6 +262,18 @@ public class RuleManager : NetworkBehaviour
     public void RpcDisplayWinner(PlayerServerStats winner)
     {
         winnerText.GetComponent<Text>().text = winner.playerId + " won!";
+    }
+
+    private void ShowMenu(CanvasGroup group) {
+        group.alpha = 1.0f;
+        group.interactable = true;
+        group.blocksRaycasts = true;
+    }
+
+    private void HideMenu(CanvasGroup group) {
+        group.alpha = 0.0f;
+        group.interactable = false;
+        group.blocksRaycasts = false;
     }
 }
 
