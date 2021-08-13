@@ -84,6 +84,10 @@ public class RuleManager : NetworkBehaviour
         }
     }
 
+    void Awake() {
+        DisplayScore();
+    }
+
     // Update is called once per frame
     void Update()
     {
@@ -202,13 +206,16 @@ public class RuleManager : NetworkBehaviour
             //scoreboardPlayerText.GetComponent<Text>().text = pt;
             //scoreboardScoreText.GetComponent<Text>().text = st;
 
-            string[] scoreboardText = GetScoreboardText();
-            scoreboardPlayerText.GetComponent<Text>().text = scoreboardText[0];
-            scoreboardScoreText.GetComponent<Text>().text = scoreboardText[1];
+            CanvasGroup parentGroup = scoreboardPlayerText.GetComponentInParent<CanvasGroup>();
+            ShowMenu(parentGroup);
+            scoreboardPlayerText.GetComponent<TMPro.TMP_Text>().text = scoreboardText[0];
+            scoreboardScoreText.GetComponent<TMPro.TMP_Text>().text = scoreboardText[1];
         } else
         {
-            scoreboardPlayerText.GetComponent<Text>().text = "";
-            scoreboardScoreText.GetComponent<Text>().text = "";
+            scoreboardPlayerText.GetComponent<TMPro.TMP_Text>().text = "";
+            scoreboardScoreText.GetComponent<TMPro.TMP_Text>().text = "";
+            CanvasGroup parentGroup = playerNameText.GetComponentInParent<CanvasGroup>();
+            HideMenu(parentGroup);
         }
     }
 
@@ -587,6 +594,18 @@ public class RuleManager : NetworkBehaviour
     {
         Debug.Log("Cleaning up UI");
         playerListText.GetComponent<TMP_Text>().text = "";
+    }
+
+    private void ShowMenu(CanvasGroup group) {
+        group.alpha = 1.0f;
+        group.interactable = true;
+        group.blocksRaycasts = true;
+    }
+
+    private void HideMenu(CanvasGroup group) {
+        group.alpha = 0.0f;
+        group.interactable = false;
+        group.blocksRaycasts = false;
     }
 }
 

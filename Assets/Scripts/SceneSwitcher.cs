@@ -4,6 +4,10 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class SceneSwitcher: MonoBehaviour {
+
+    public void MainMenuScene() {
+        SceneManager.LoadScene("MainMenu");
+    }
     public void MultiplayerScene() {
         SceneManager.LoadScene("Multiplayer");
     }
