@@ -53,6 +53,12 @@ public class CustomNetworkManager : NetworkManager
         ruleManager.GetComponent<RuleManager>().CleanupDisconnectedPlayers();
     }
 
+    public override void OnClientDisconnect(NetworkConnection conn)
+    {
+        base.OnClientDisconnect(conn);
+        ruleManager.GetComponent<RuleManager>().CleanupUIOnDisconnect();
+    }
+
     public override void OnStartHost()
     {
         Debug.Log("Host has started");

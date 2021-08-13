@@ -23,6 +23,7 @@ public class RuleManager : NetworkBehaviour
     [SerializeField] GameObject postRoundPlayerText;
     [SerializeField] GameObject postRoundScoreText;
     [SerializeField] GameObject winnerText;
+    [SerializeField] GameObject playerListText;
 
     // Round setup menu objects
     [SerializeField] GameObject rulesMenu;  // Parent object for rules settings
@@ -41,6 +42,8 @@ public class RuleManager : NetworkBehaviour
     List<PlayerServerStats> playerServerStats;  // Stored only on the server, this is used to track players' stats
 
     List<PlayerLocalStats> playerLocalStats;    // Stored on each client, this simply mirrors the values in playerServerStats for UI display
+    List<string> playerNames;                   // A list of the connected players' names, for pre-round UI. Updated every second
+    float nameListUpdateTimer;
 
 
     [SerializeField] float PostRoundScoreboardTime = 8.0f;
@@ -74,7 +77,7 @@ public class RuleManager : NetworkBehaviour
     {
         if (isServer)
         {
-
+            nameListUpdateTimer = 1.0f;
         } else
         {
             startRoundButton.SetActive(false);
@@ -95,6 +98,16 @@ public class RuleManager : NetworkBehaviour
             if(PostRoundTimer < 0)
             {
                 BeginSetup();
+            }
+        } else if(isServer && roundStatus == RoundStatus.Setup)
+        {
+            nameListUpdateTimer -= Time.deltaTime;
+            if(nameListUpdateTimer <= 0.0f)
+            {
+                Debug.Log("Updating player name list");
+                Debug.Log(GetPlayerNameList());
+                nameListUpdateTimer = 1.0f;
+                RpcSendPlayerNames(GetPlayerNameList());
             }
         }
         DisplayScoreInRound();
@@ -136,6 +149,21 @@ public class RuleManager : NetworkBehaviour
     {
         playerLocalStats = null;
         winnerText.GetComponent<Text>().text = "";
+    }
+
+    string GetPlayerNameList()  // For use in round setup
+    {
+        string t = "";
+
+        foreach (PlayerSoul p in playerSouls)
+        {
+            if (p != null)
+            {
+                t += "Player " + p.GetComponent<NetworkIdentity>().netId.ToString() + "\n";
+            }
+        }
+
+        return t;
     }
 
     string[] GetScoreboardText()
@@ -238,7 +266,7 @@ public class RuleManager : NetworkBehaviour
         //    scores[i] = playerServerStats[i].score;
         //}
 
-        //RpcAddPlayer(playerIds, scores);
+        //RpcAddPlayer();
     }
 
     // this probably doesn't work
@@ -252,6 +280,18 @@ public class RuleManager : NetworkBehaviour
     //    }
     //    playerIdentities.Remove();
     //}
+
+    [ClientRpc]
+    public void RpcSendPlayerNames(string pn)
+    {
+        if(roundStatus == RoundStatus.Setup)
+        {
+            playerListText.GetComponent<TMP_Text>().text = pn;
+        } else
+        {
+            playerListText.GetComponent<TMP_Text>().text = "";
+        }
+    }
 
     [ClientRpc]
     public void RpcInitLocalStats(NetworkInstanceId[] ids, int[] scores)
@@ -356,6 +396,9 @@ public class RuleManager : NetworkBehaviour
     [ClientRpc]
     void RpcBeginSetup()
     {
+        // Note: This will NOT be called on the server's client when the server is first started, only on subsequent rounds
+        // Probably because the client isn't created until after BeginSetup() has already run
+
         winnerText.GetComponent<Text>().text = "";
         postRoundPlayerText.GetComponent<TextMeshProUGUI>().text = "";
         postRoundScoreText.GetComponent<TextMeshProUGUI>().text = "";
@@ -415,6 +458,14 @@ public class RuleManager : NetworkBehaviour
         }
 
         InitializeStats();
+
+        RpcStartRound();
+    }
+
+    [ClientRpc]
+    void RpcStartRound()
+    {
+        playerListText.GetComponent<Text>().text = "";
     }
 
     void EndRound(bool roundWon, PlayerServerStats winningPlayer)
@@ -527,6 +578,16 @@ public class RuleManager : NetworkBehaviour
     //{
     //    winnerText.GetComponent<Text>().text = "";
     //}
+
+    // This function is called on a client when it disconnects from a server, to reset the UI to its normal state
+    // NOTE: This is called through OnClientDisconnect, which doesn't get called when the client initiates the disconnect. (Todo: Check if
+    // this problem is specific to localhost) Thus, this isn't always called properly, but it's Unity's fault, not mine :P
+    // Should probably report this bug and/or find a workaround but i'm lazy
+    public void CleanupUIOnDisconnect()
+    {
+        Debug.Log("Cleaning up UI");
+        playerListText.GetComponent<TMP_Text>().text = "";
+    }
 }
 
 public class PlayerServerStats
