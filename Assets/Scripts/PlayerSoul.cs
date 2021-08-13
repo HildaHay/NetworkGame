@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class PlayerIdentity : NetworkBehaviour
+// This class represents the actual player, not their in-game character, and persists between rounds.
+// It's used to manage the player's network connection, input, and stats
+public class PlayerSoul : NetworkBehaviour
 {
     NetworkIdentity networkIdentity;
 

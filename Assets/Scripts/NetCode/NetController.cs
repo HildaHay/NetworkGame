@@ -65,7 +65,7 @@ public class NetController : MonoBehaviour {
 	[Tooltip("The players which are added to the game when a person joins")]
 	public GameObject playerPrefab;
 
-	public Dictionary<string, PlayerIdentity> players = new Dictionary<string, PlayerIdentity>();
+	public Dictionary<string, PlayerSoul> players = new Dictionary<string, PlayerSoul>();
 
 	[Tooltip("The Animation to call on game over.")]
 	public Animator cameraAnimator;
@@ -91,7 +91,7 @@ public class NetController : MonoBehaviour {
 		GameObject playerObject = Instantiate(playerPrefab, randomPos, Quaternion.identity) as GameObject;
 		playerObject.name = player_name;
 
-		PlayerIdentity playBoi = playerObject.GetComponent<PlayerIdentity>();
+		PlayerSoul playBoi = playerObject.GetComponent<PlayerSoul>();
 
 		players.Add(player_name, playBoi);
 

@@ -14,29 +14,52 @@ public class RuleManager : NetworkBehaviour
         PostRound
     }
 
+    // Game logic objects
     [SerializeField] GameObject networkManager;
+    
+    // HUD objects
     [SerializeField] GameObject scoreboardPlayerText;
     [SerializeField] GameObject scoreboardScoreText;
     [SerializeField] GameObject postRoundPlayerText;
     [SerializeField] GameObject postRoundScoreText;
     [SerializeField] GameObject winnerText;
 
+    // Round setup menu objects
+    [SerializeField] GameObject rulesMenu;  // Parent object for rules settings
     [SerializeField] GameObject startRoundButton;
-    [SerializeField] GameObject pointsToWinInput;
+    [SerializeField] GameObject killsToWinInput;
+    [SerializeField] GameObject hitPointsInput;
+    [SerializeField] GameObject damageInput;
+    [SerializeField] GameObject respawnTimeInput;
 
+    // Game objects
     [SerializeField] GameObject[] respawnPoints;
 
+    // Player objects
     List<NetworkInstanceId> playerIDs;  // this also includes players who have disconnected previously
+    List<PlayerSoul> playerSouls;
     List<PlayerServerStats> playerServerStats;  // Stored only on the server, this is used to track players' stats
 
     List<PlayerLocalStats> playerLocalStats;    // Stored on each client, this simply mirrors the values in playerServerStats for UI display
 
-    List<PlayerIdentity> playerIdentities;
 
-    int baseHealth = 1;
-    int baseDamage = 1;
-    float respawnTime = 2.0f;
-    int pointsToWin = 1;
+    [SerializeField] float PostRoundScoreboardTime = 8.0f;
+
+    //[SerializeField] int baseHealth = 3;
+    //[SerializeField] int baseDamage = 1;
+    //[SerializeField] float respawnTime = 3.0f;
+    //[SerializeField] int killsToWin = 10;
+
+    [SerializeField] int baseHitPoints = 3;
+    [SerializeField] int baseDamage = 1;
+    [SerializeField] float baseRespawnTime = 3.0f;
+    [SerializeField] int baseKillsToWin = 10;
+
+    bool gameRulesInitialized = false;
+    int hitPoints;
+    int damage;
+    float respawnTime;
+    int killsToWin;
 
     //[SyncVar]
     //bool gameRunning;
@@ -92,7 +115,7 @@ public class RuleManager : NetworkBehaviour
             playerServerStats = new List<PlayerServerStats>();
         }
 
-        playerIdentities = new List<PlayerIdentity>();
+        playerSouls = new List<PlayerSoul>();
     }
 
     public void ServerShutdown()
@@ -168,18 +191,18 @@ public class RuleManager : NetworkBehaviour
             playerServerStats = new List<PlayerServerStats>();
         //}
 
-        foreach(PlayerIdentity p in playerIdentities)
+        foreach(PlayerSoul p in playerSouls)
         {
             if(p != null)
             {
                 PlayerServerStats s = new PlayerServerStats(p.gameObject);
                 playerServerStats.Add(s);
-                p.GetComponent<PlayerIdentity>().stats = s;
+                p.GetComponent<PlayerSoul>().stats = s;
 
             }
         }
 
-        foreach(PlayerIdentity p in playerIdentities)
+        foreach(PlayerSoul p in playerSouls)
         {
             if (p != null)
             {
@@ -200,7 +223,7 @@ public class RuleManager : NetworkBehaviour
     // Called on server when a new player joins
     public void AddPlayer(GameObject p)
     {
-        playerIdentities.Add(p.GetComponent<PlayerIdentity>());
+        playerSouls.Add(p.GetComponent<PlayerSoul>());
 
         //PlayerServerStats s = new PlayerServerStats(p);
         //playerServerStats.Add(s);
@@ -267,11 +290,11 @@ public class RuleManager : NetworkBehaviour
                 {
                     if (s.player != null)
                     {
-                        if (s.player.GetComponent<PlayerIdentity>().Character != null)
+                        if (s.player.GetComponent<PlayerSoul>().Character != null)
                         {
-                            if (!s.player.GetComponent<PlayerIdentity>().Character.IsAlive())
+                            if (!s.player.GetComponent<PlayerSoul>().Character.IsAlive())
                             {
-                                s.player.GetComponent<PlayerIdentity>().Character.CmdRespawnPlayer(GetSpawnPoint());
+                                s.player.GetComponent<PlayerSoul>().Character.CmdRespawnPlayer(GetSpawnPoint());
                             }
                         }
                     }
@@ -290,7 +313,7 @@ public class RuleManager : NetworkBehaviour
         PlayerServerStats winner = null;
         foreach(PlayerServerStats p in playerServerStats)
         {
-            if (p.score >= pointsToWin)
+            if (p.score >= GetKillsToWin())
             {
                 winner = p;
             }
@@ -307,8 +330,14 @@ public class RuleManager : NetworkBehaviour
     void BeginSetup()
     {
         startRoundButton.SetActive(true);
-        pointsToWinInput.SetActive(true);
-        pointsToWinInput.GetComponent<TMP_InputField>().text = pointsToWin.ToString();
+
+        // Open the game rules menu
+        if (!gameRulesInitialized) LoadBaseGameRules();
+        rulesMenu.SetActive(true);
+        killsToWinInput.GetComponent<TMP_InputField>().text = killsToWin.ToString();
+        hitPointsInput.GetComponent<TMP_InputField>().text = hitPoints.ToString();
+        respawnTimeInput.GetComponent<TMP_InputField>().text = respawnTime.ToString();
+        damageInput.GetComponent<TMP_InputField>().text = damage.ToString();
 
         roundStatus = RoundStatus.Setup;
         if (isServer)
@@ -320,8 +349,8 @@ public class RuleManager : NetworkBehaviour
 
     public void CleanupDisconnectedPlayers()
     {
-        // This removes players who have disconnected from the playerIdentities list
-        playerIdentities.RemoveAll(item => item == null);
+        // This removes players who have disconnected from the players list
+        playerSouls.RemoveAll(item => item == null);
     }
 
     [ClientRpc]
@@ -332,21 +361,52 @@ public class RuleManager : NetworkBehaviour
         postRoundScoreText.GetComponent<TextMeshProUGUI>().text = "";
     }
 
+    void LoadBaseGameRules()
+    {
+        if (!gameRulesInitialized)
+        {
+            hitPoints = baseHitPoints;
+            damage = baseDamage;
+            respawnTime = baseRespawnTime;
+            killsToWin = baseKillsToWin;
+
+            gameRulesInitialized = true;
+        }
+    }
+
     public void StartRound()
     {
         Debug.Log("Starting round");
         startRoundButton.SetActive(false);
-        pointsToWinInput.SetActive(false);
+        rulesMenu.SetActive(false);
 
         CleanupDisconnectedPlayers();   // Just in case there's a 
 
-        int ptw = 10;    // default
-        bool tryParsePtw = int.TryParse(pointsToWinInput.GetComponent<TMP_InputField>().text, out ptw);
-        pointsToWin = ptw;
+        // Load game rules from input fields
+
+        // Kills to win
+        int ktw = killsToWin;
+        bool tryParseKtw = int.TryParse(killsToWinInput.GetComponent<TMP_InputField>().text, out ktw);
+        killsToWin = ktw;
+
+        // Hit points
+        int hp = hitPoints;
+        bool tryParseHP = int.TryParse(hitPointsInput.GetComponent<TMP_InputField>().text, out hp);
+        hitPoints = hp;
+
+        // Damage
+        int d = damage;
+        bool tryParseDamage = int.TryParse(damageInput.GetComponent<TMP_InputField>().text, out d);
+        damage = d;
+
+        // Respawn Time
+        float rt = respawnTime;
+        bool tryParseRT = float.TryParse(respawnTimeInput.GetComponent<TMP_InputField>().text, out rt);
+        respawnTime = rt;
 
         roundStatus = RoundStatus.InRound;
 
-        foreach(PlayerIdentity p in playerIdentities)
+        foreach(PlayerSoul p in playerSouls)
         {
             if (p != null)
             {
@@ -362,7 +422,7 @@ public class RuleManager : NetworkBehaviour
         Debug.Log("Ending game");
         //gameRunning = false;
         roundStatus = RoundStatus.PostRound;
-        PostRoundTimer = 10.0f;
+        PostRoundTimer = PostRoundScoreboardTime;
         if (roundWon)
         {
             RpcDisplayWinner(winningPlayer);
@@ -370,7 +430,7 @@ public class RuleManager : NetworkBehaviour
         {
             RpcDisplayNoWinner();
         }
-        foreach(PlayerIdentity p in playerIdentities)
+        foreach(PlayerSoul p in playerSouls)
         {
             if (p != null)
             {
@@ -394,9 +454,24 @@ public class RuleManager : NetworkBehaviour
         EndRound(false, null);
     }
 
-    public int GetBaseHealth()
+    public int GetHitPoints()
     {
-        return baseHealth;
+        return hitPoints;
+    }
+
+    public int GetWeaponDamage()
+    {
+        return damage;
+    }
+
+    public float GetRespawnTime()
+    {
+        return respawnTime;
+    }
+
+    public int GetKillsToWin()
+    {
+        return killsToWin;
     }
 
     [Command]
@@ -413,7 +488,7 @@ public class RuleManager : NetworkBehaviour
         k.score += 1;
         RpcUpdateScore(k.playerId, k.score);
 
-        d.respawnTimer = respawnTime;
+        d.respawnTimer = GetRespawnTime();
     }
 
     // This should be called whenever a player's score changes
