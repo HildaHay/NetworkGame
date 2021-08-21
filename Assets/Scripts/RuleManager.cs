@@ -85,7 +85,7 @@ public class RuleManager : NetworkBehaviour
     }
 
     void Awake() {
-        DisplayScore();
+        DisplayScoreInRound();
     }
 
     // Update is called once per frame
@@ -205,6 +205,7 @@ public class RuleManager : NetworkBehaviour
 
             //scoreboardPlayerText.GetComponent<Text>().text = pt;
             //scoreboardScoreText.GetComponent<Text>().text = st;
+            string[] scoreboardText = GetScoreboardText();
 
             CanvasGroup parentGroup = scoreboardPlayerText.GetComponentInParent<CanvasGroup>();
             ShowMenu(parentGroup);
@@ -213,8 +214,8 @@ public class RuleManager : NetworkBehaviour
         } else
         {
             scoreboardPlayerText.GetComponent<TMPro.TMP_Text>().text = "";
-            scoreboardScoreText.GetComponent<TMPro.TMP_Text>().text = "";
-            CanvasGroup parentGroup = playerNameText.GetComponentInParent<CanvasGroup>();
+            scoreboardScoreText.GetComponent<TMPro.TMP_Text>().text = ""; 
+            CanvasGroup parentGroup = scoreboardPlayerText.GetComponentInParent<CanvasGroup>();
             HideMenu(parentGroup);
         }
     }
