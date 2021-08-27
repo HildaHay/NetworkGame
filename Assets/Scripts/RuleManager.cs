@@ -465,7 +465,7 @@ public class RuleManager : NetworkBehaviour
     [ClientRpc]
     void RpcStartRound()
     {
-        playerListText.GetComponent<Text>().text = "";
+        playerListText.GetComponent<TMP_Text>().text = "";
     }
 
     void EndRound(bool roundWon, PlayerServerStats winningPlayer)
