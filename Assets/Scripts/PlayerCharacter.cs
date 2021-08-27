@@ -208,8 +208,13 @@ public class PlayerCharacter : NetworkBehaviour
 
     void InitHealth()
     {
-        health = ruleManager.GetBaseHealth();
+        health = ruleManager.GetHitPoints();
         alive = true;
+    }
+
+    public int GetDamage()
+    {
+        return ruleManager.GetWeaponDamage();
     }
 
     [Command]
