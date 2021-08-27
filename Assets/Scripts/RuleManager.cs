@@ -16,6 +16,7 @@ public class RuleManager : NetworkBehaviour
 
     // Game logic objects
     [SerializeField] GameObject networkManager;
+    [SerializeField] GameObject spawnManager;
     
     // HUD objects
     [SerializeField] GameObject scoreboardPlayerText;
@@ -557,8 +558,9 @@ public class RuleManager : NetworkBehaviour
 
     public Vector2 GetSpawnPoint()
     {
-        int r = Random.Range(0, respawnPoints.Length);
-        return respawnPoints[r].transform.position;
+        //int r = Random.Range(0, respawnPoints.Length);
+        //return respawnPoints[r].transform.position;
+        return spawnManager.GetComponent<SpawnManager>().GetSpawnPosition();
     }
 
     [ClientRpc]
